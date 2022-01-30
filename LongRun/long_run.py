@@ -206,6 +206,7 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
 
         # Log ----------------------------------------------------------------------------------------------------------
         with open(run_info_fp, 'a') as run_info_log:
+            stop_reason = stop_reason.replace('"', "'")  # to avoid parsing errors in CSV file
             run_info_log.write(f'{prev_run+1},"{start}","{end}",{last_n},"{stop_reason}",{mp_threshold},"{cpu_info}"\n')
         # --------------------------------------------------------------------------------------------------------------
 

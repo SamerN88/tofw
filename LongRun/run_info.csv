@@ -1,1 +1,2 @@
 run,start,end,last_n,stop_reason,mp_threshold,cpu_info
+1,"2022-01-30 13:23:12.020141 CST","2022-01-30 14:43:04.300253 CST",82,"PROCESS STOPPED BY USER",69,"{'cores': 8, 'freq': 2300}"
