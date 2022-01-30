@@ -75,7 +75,7 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
         raise ValueError(msg)
 
     # Define file paths
-    master_cells_fp = 'master_cells.csv'
+    master_data_fp = 'master_data.csv'
     run_info_fp = 'run_info.csv'
     dump_fp = 'all_cells.csv'
     stdout_fp = 'stdout.txt'
@@ -93,12 +93,12 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
     print(log_history.rstrip() + '\n')
     print('END LOG HISTORY ' + '-'*61 + '\n')
 
-    # Read master cells log as a DataFrame (to read most current n and growth_avg values)
-    master_cells_df = pd.read_csv(master_cells_fp)
+    # Read master data log as a DataFrame (to read most current n and growth_avg values)
+    master_data_df = pd.read_csv(master_data_fp)
 
     # Set n and growth_avg to most current values
-    n = list(master_cells_df['n'])[-1] + 1
-    growth_avg = list(master_cells_df['growth_avg'])[-1]
+    n = list(master_data_df['n'])[-1] + 1
+    growth_avg = list(master_data_df['growth_avg'])[-1]
 
     stop_reason = 'UNKNOWN'
 
@@ -107,7 +107,7 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
             t1 = time.time()
 
             # Open log files for current iteration
-            master_cells_log = open(master_cells_fp, 'a')  # to log master cell data
+            master_data_log = open(master_data_fp, 'a')  # to log master data (master cells, growth avg, etc.)
             dump = open(dump_fp, 'a')  # to log all computed entries and factorizations
             stdout_log = open(stdout_fp, 'a')  # to log print statements (standard output)
 
@@ -158,7 +158,7 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
             runtime = time.time() - t1  # in seconds
 
             # Log ------------------------------------------------------------------------------------------------------
-            master_cells_log.write(f'{n},{k},{p_n},{growth_avg},{master_entry},"{master_factors}",{runtime}\n')
+            master_data_log.write(f'{n},{k},{p_n},{growth_avg},{master_entry},"{master_factors}",{runtime}\n')
             # ----------------------------------------------------------------------------------------------------------
 
             stdout = f'n={n}, k={k}\n'
@@ -171,7 +171,7 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
             # ----------------------------------------------------------------------------------------------------------
 
             # Close log files for current iteration
-            master_cells_log.close()
+            master_data_log.close()
             dump.close()
             stdout_log.close()
 
@@ -189,7 +189,7 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
         end = f'{datetime.datetime.now()} {time.localtime().tm_zone}'
 
         # Get last n that was logged
-        last_n = list(pd.read_csv(master_cells_fp)['n'])[-1]  # better than len(file.readlines()) or Series.max()
+        last_n = list(pd.read_csv(master_data_fp)['n'])[-1]  # better than len(file.readlines()) or Series.max()
 
         # Get previous run number
         run_numbers = pd.read_csv(run_info_fp)['run']

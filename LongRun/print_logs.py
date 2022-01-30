@@ -26,7 +26,7 @@ def print_logs(filepaths):
 
 def main():
     filepaths = [
-        'master_cells.csv',
+        'master_data.csv',
         'run_info.csv',
         'all_cells.csv',
         'stdout.txt'
