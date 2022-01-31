@@ -13,6 +13,7 @@ import time
 from sympy.ntheory import factorint
 from concurrent.futures import ProcessPoolExecutor
 import psutil
+import platform
 
 # Configure pandas to use high-precision floats
 pd.set_option('display.precision', 16)
@@ -200,7 +201,14 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
 
         # Get CPU info; if fails, log error
         try:
-            cpu_info = {'cores': psutil.cpu_count(logical=False), 'freq': psutil.cpu_freq().current}
+            cpu_freq = psutil.cpu_freq()
+            cpu_info = {
+                    'cores': psutil.cpu_count(logical=False), 
+                    'current_freq': cpu_freq.current, 
+                    'max_freq': cpu_freq.max, 
+                    'min_freq': cpu_freq.min, 
+                    'os': platform.system()
+                    }
         except Exception as e:
             cpu_info = f'{type(e).__name__}: {e}'
 

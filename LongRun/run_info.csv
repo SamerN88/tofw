@@ -1,6 +1,8 @@
 run,start,end,last_n,stop_reason,mp_threshold,cpu_info
-1,"2022-01-30 13:23:12.020141 CST","2022-01-30 14:43:04.300253 CST",82,"PROCESS STOPPED BY USER",69,"{'cores': 8, 'freq': 2300}"
-2,"2022-01-30 14:48:00.666234 CST","2022-01-30 15:00:55.451779 CST",82,"PROCESS STOPPED BY USER",69,"{'cores': 8, 'freq': 2300}"
-3,"2022-01-30 15:01:15.415167 CST","2022-01-30 15:24:24.710150 CST",82,"PROCESS STOPPED BY USER",100,"{'cores': 8, 'freq': 2300}"
-4,"2022-01-30 15:26:12.662539 CST","2022-01-30 16:06:01.069664 CST",84,"PROCESS STOPPED BY USER",100,"{'cores': 8, 'freq': 2300}"
-5,"2022-01-30 16:06:28.163293 CST","2022-01-30 18:06:11.473021 CST",88,"PROCESS STOPPED BY USER",69,"{'cores': 8, 'freq': 2300}"
+1,"2022-01-30 13:23:12.020141 CST","2022-01-30 14:43:04.300253 CST",82,"PROCESS STOPPED BY USER",69,"{'cores': 8, 'current_freq': 2300, 'max_freq': 2300, 'min_freq': 2300, 'os': 'Darwin'}"
+2,"2022-01-30 14:48:00.666234 CST","2022-01-30 15:00:55.451779 CST",82,"PROCESS STOPPED BY USER",69,"{'cores': 8, 'current_freq': 2300, 'max_freq': 2300, 'min_freq': 2300, 'os': 'Darwin'}"
+3,"2022-01-30 15:01:15.415167 CST","2022-01-30 15:24:24.710150 CST",82,"PROCESS STOPPED BY USER",100,"{'cores': 8, 'current_freq': 2300, 'max_freq': 2300, 'min_freq': 2300, 'os': 'Darwin'}"
+4,"2022-01-30 15:26:12.662539 CST","2022-01-30 16:06:01.069664 CST",84,"PROCESS STOPPED BY USER",100,"{'cores': 8, 'current_freq': 2300, 'max_freq': 2300, 'min_freq': 2300, 'os': 'Darwin'}"
+5,"2022-01-30 16:06:28.163293 CST","2022-01-30 18:06:11.473021 CST",88,"PROCESS STOPPED BY USER",69,"{'cores': 8, 'current_freq': 2300, 'max_freq': 2300, 'min_freq': 2300, 'os': 'Darwin'}"
+6,"2022-01-31 00:53:09.594712 UTC","2022-01-31 17:25:55.168197 UTC",103,"PROCESS STOPPED BY USER",69,"{'cores': 4, 'current_freq': 3.6799999999999997, 'max_freq': 3700.0, 'min_freq': 800.0, 'os': 'Linux'}"
+7,"2022-01-31 17:55:30.627700 UTC","2022-01-31 17:55:36.450421 UTC",103,"PROCESS STOPPED BY USER",69,"{'cores': 4, 'current_freq': 3.492, 'max_freq': 3700.0, 'min_freq': 800.0, 'os': 'Linux'}"
