@@ -9,6 +9,13 @@ pd.set_option('display.max_columns', 101)
 pd.set_option("display.max_rows", None, "display.max_columns", None)  # print whole table instead of a portion of it
 pd.set_option('display.precision', 16)  # high-precision floats
 
+ALL_FILEPATHS = [
+    'master_data.csv',
+    'run_info.csv',
+    'all_cells.csv',
+    'stdout.txt'
+]
+
 
 def print_logs(filepaths):
     for i, fp in enumerate(filepaths):
@@ -25,12 +32,15 @@ def print_logs(filepaths):
 
 
 def main():
-    filepaths = [
-        'master_data.csv',
-        'run_info.csv',
-        'all_cells.csv',
-        'stdout.txt'
-    ]
+    filepaths = []
+    inp = input('Enter file paths separated by newline:\n')
+    while inp != '':
+        filepaths.append(inp)
+        inp = input()
+
+    if len(filepaths) == 0:
+        filepaths = ALL_FILEPATHS
+
     print_logs(filepaths)
 
 

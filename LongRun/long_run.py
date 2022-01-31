@@ -203,12 +203,12 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
         try:
             cpu_freq = psutil.cpu_freq()
             cpu_info = {
-                    'cores': psutil.cpu_count(logical=False), 
-                    'current_freq': cpu_freq.current, 
-                    'max_freq': cpu_freq.max, 
-                    'min_freq': cpu_freq.min, 
-                    'os': platform.system()
-                    }
+                'cores': psutil.cpu_count(logical=False),
+                'current_freq': cpu_freq.current,
+                'max_freq': cpu_freq.max,
+                'min_freq': cpu_freq.min,
+                'os': platform.system()
+            }
         except Exception as e:
             cpu_info = f'{type(e).__name__}: {e}'
 
