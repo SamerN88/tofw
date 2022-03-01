@@ -82,7 +82,7 @@ def log_to_file(fp, content):
 
 # This function is strictly designed to communicate with outside text files in a specific way;
 # it serves a very specific purpose and is not made for general use.
-def prime_growth_data_logger(max_depth=None, mp_threshold=69):
+def prime_growth_data_logger(max_depth=None, mp_threshold=None):
     """
     The growth average metric (growth_avg) is the quantity
 
@@ -131,6 +131,8 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
         if not LOG_DATA:
             print('(NOT LOGGING DATA)\n')
 
+        print(f'mp_threshold={mp_threshold}\n')
+
         while (max_depth is None) or (n <= max_depth):
             t1 = time.time()
 
@@ -140,7 +142,7 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
             # At low values of n, the overhead from multiprocessing actually takes longer than factoring the row
             # synchronously, so we only let multiprocessing kick in at a higher n when factoring synchronously
             # gets sufficiently slow.
-            if n < mp_threshold:
+            if (mp_threshold is None) or (n < mp_threshold):
                 row_decomp = [factorint(e) for e in row]
             else:
                 # Factor the entries in row n using multiprocessing (for speed)
@@ -237,15 +239,13 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
 
 
 def main():
-    prime_growth_data_logger(mp_threshold=200)
+    prime_growth_data_logger()
 
 
 if __name__ == "__main__":
     main()
 
 
-#   TODO: make mp_threshold=None and print mp_threshold at beginning of run
-#
 #   TODO: start new exploration called MasterSift that gets only master cells in the following way:
 #       - since master cells factor very quickly (under 1 sec up to n=126), we will assume that master cells up to
 #         n=N factor in under X_N seconds; we then go through a row, and if a cell takes longer than X_N sec to
