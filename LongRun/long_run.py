@@ -156,7 +156,10 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=None):
         print('(NOT LOGGING DATA)')
     if not UPDATE_GIT:
         print('(NOT UPDATING GIT)')
-    print()
+
+    # Just proper output spacing
+    if (not LOG_DATA) or (not UPDATE_GIT):
+        print()
 
     # Show parameters
     print(f'max_depth={max_depth}')
