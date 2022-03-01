@@ -76,10 +76,10 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
         raise ValueError(msg)
 
     # Define file paths
-    master_data_fp = 'master_data.csv'
-    run_info_fp = 'run_info.csv'
-    dump_fp = 'all_cells.csv'
-    stdout_fp = 'stdout.txt'
+    master_data_fp = 'logs/master_data.csv'
+    run_info_fp = 'logs/run_info.csv'
+    dump_fp = 'logs/all_cells.csv'
+    stdout_fp = 'logs/stdout.txt'
 
     # Start timestamp
     start = f'{datetime.datetime.now()} {time.localtime().tm_zone}'
@@ -228,3 +228,44 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# TODO: SET LOG=False WHILE TESTING
+#   ========================================================================================
+#
+#   TODO: start new exploration called MasterSift that gets only master cells in the following way:
+#       - since master cells factor very quickly (under 1 sec up to n=126), we will assume that master cells up to
+#         n=N factor in under X_N seconds; we then go through a row, and if a cell takes longer than X_N sec to
+#         factor, we skip it. we only factor easy cells, then find the master cell among those.
+#         * CON: this assumes that master cells will always factor in under X seconds given n=N
+#         * PRO: if our assumption holds, then this is a super expedient way to get master cells
+#
+#   TODO: run git commands from Python to add, commit, and push after every iteration
+#
+#   TODO: open files AFTER factoring, to reduce the time that files are kept open
+#       - consider writing a function that takes a file path and a content argument, opens the file, appends to it,
+#         and closes the file. This will simplify the code. Call it append_to_file(fp, content).
+#
+#   TODO: there are many parts, especially with cado now, so just compartmentalize everything; separate functions
+#       for the following (NOTE: non-trivial = non-zero, non-power-of-2, and k<=0):
+#       - append content to a file
+#       - get non-trivial entries of row n
+#       - get list of indexes (k-coordinates) for the non-trivial cells in row n
+#       - get cado-nfs output as a list of factors
+#       - one big function focused only on factoring an entry:
+#           * accepts the multiprocessing threshold parameter mp_threshold
+#           * contains all sympy and cado implementation
+#
+#   TODO: implement cado: cado factors as many cells as possible, gives the rest to sympy
+#       - figure out how to silence cado messages and just capture output
+#       - use code snippet below to get factors as a list:
+#
+#     import subprocess
+#
+#     n = 17113636163329171307055067007779498398991498581710873599122232450394704
+#
+#     output = subprocess.check_output(['python3', 'cado-nfs.py', str(n), '--screenlog', 'WARNING'])
+#     output = output.decode("utf-8")
+#
+#     factors = [int(i) for i in output.split()]
+#     print(factors)
