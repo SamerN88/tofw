@@ -18,8 +18,17 @@ import platform
 # Configure pandas to use high-precision floats
 pd.set_option('display.precision', 16)
 
+# False for testing, True for deployment
+LOG_DATA = False
 
-# returns the value at coordinate k on row n=1 (defined in Burton's paper)
+# Define logs' file paths
+MASTER_CELLS_FP = 'logs/master_cells.csv'
+RUN_INFO_FP = 'logs/run_info.csv'
+ALL_CELLS_FP = 'logs/all_cells.csv'
+STDOUT_FP = 'logs/stdout.txt'
+
+
+# Returns the value at coordinate k on row n=1 (defined in Burton's paper)
 def b(k: int) -> int:
     if (k % 2 == 0) and (k <= 0):
         return 4
@@ -27,7 +36,7 @@ def b(k: int) -> int:
         return 0
 
 
-# gets the value of a cell in the Table of Free Weights, iteratively
+# Gets the value of a cell in the Table of Free Weights, iteratively
 def B(k, n):
     if n < 1:
         msg = 'tape index (n) must be a natural number from [1, inf)'
@@ -49,8 +58,30 @@ def B(k, n):
     return row[0]
 
 
+# Returns the k-indexes of non-trivial values in row n (neg_k=True gets only k<=0)
+def get_k_index(n, neg_k=True):
+    return range(3-n, (0 if neg_k else n-3) + 1, 2)
+
+
+# Returns the non=trivial entries in row n (neg_k=True gets only k<=0)
+def get_row(n, neg_k=True):
+    return [B(k, n) for k in get_k_index(n, neg_k)]
+
+
+def read_file(fp):
+    with open(fp, 'r') as file:
+        return file.read()
+
+
+def log_to_file(fp, content):
+    # Only logs data if LOG_DATA flag is True
+    if LOG_DATA:
+        with open(fp, 'a') as file:
+            file.write(content)
+
+
 # This function is strictly designed to communicate with outside text files in a specific way;
-# it serves a very specific purpose and is not made for testing or general use.
+# it serves a very specific purpose and is not made for general use.
 def prime_growth_data_logger(max_depth=None, mp_threshold=69):
     """
     The growth average metric (growth_avg) is the quantity
@@ -75,27 +106,20 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
         msg = 'max_depth argument must be at least 1 (row index starts at 1)'
         raise ValueError(msg)
 
-    # Define file paths
-    master_data_fp = 'logs/master_data.csv'
-    run_info_fp = 'logs/run_info.csv'
-    dump_fp = 'logs/all_cells.csv'
-    stdout_fp = 'logs/stdout.txt'
-
     # Start timestamp
     start = f'{datetime.datetime.now()} {time.localtime().tm_zone}'
     print(f'Start run at {start}\n\n')
 
-    # Open file for reading stdout history
-    with open(stdout_fp, 'r') as stdout_log:
-        log_history = stdout_log.read()
+    # Read stdout history
+    log_history = read_file(STDOUT_FP)
 
     # Print complete log history
     print('START LOG HISTORY ' + '-'*59 + '\n')
     print(log_history.rstrip() + '\n')
     print('END LOG HISTORY ' + '-'*61 + '\n')
 
-    # Read master data log as a DataFrame (to read most current n and growth_avg values)
-    master_data_df = pd.read_csv(master_data_fp)
+    # Read master data log as a DataFrame (to read last n and growth_avg values)
+    master_data_df = pd.read_csv(MASTER_CELLS_FP)
 
     # Set n and growth_avg to most current values
     n = list(master_data_df['n'])[-1] + 1
@@ -104,16 +128,14 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
     stop_reason = 'UNKNOWN'
 
     try:
+        if not LOG_DATA:
+            print('(NOT LOGGING DATA)\n')
+
         while (max_depth is None) or (n <= max_depth):
             t1 = time.time()
 
-            # Open log files for current iteration
-            master_data_log = open(master_data_fp, 'a')  # to log master data (master cells, growth avg, etc.)
-            dump = open(dump_fp, 'a')  # to log all computed entries and factorizations
-            stdout_log = open(stdout_fp, 'a')  # to log print statements (standard output)
-
-            # Generate non-trivial entries in row n (without factoring)
-            row = [B(k, n) for k in range(3 - n, 0 + 1)]
+            # Generate non-trivial entries in row n (only k<=0)
+            row = get_row(n)
 
             # At low values of n, the overhead from multiprocessing actually takes longer than factoring the row
             # synchronously, so we only let multiprocessing kick in at a higher n when factoring synchronously
@@ -125,27 +147,22 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
                 with ProcessPoolExecutor() as pool:  # by default max_workers=min(32, os.cpu_count() + 4)
                     row_decomp = pool.map(factorint, row)
 
-            # Find the master cell and extract desired values
-            # Initialize values at leftmost cell, i.e. on the diagonal (-n+1, n), which is a power of 2
-            k = 1 - n
+            # Find the master cell and extract desired values. Initialize p_n as 2 and other values as None so
+            # if no master cell is found for whatever reason, it is visible in the logs
             p_n = 2
-            master_entry = 4**n
-            master_factors = {2: 2*n}
-            for i, factors in enumerate(row_decomp, 3 - n):  # index row_decomp by each cell's k coordinate
-                entry = row[i - (3-n)]
-
-                if entry == 0:
-                    continue
-
+            master_k = None
+            master_entry = None
+            master_factors = None
+            for k, entry, factors in zip(get_k_index(n), row, row_decomp):  # index row_decomp by each cell's k coordinate
                 max_factor = max(factors.keys())
 
                 # Log --------------------------------------------------------------------------------------------------
-                dump.write(f'{n},{i},{entry},"{factors}",{max_factor}\n')
+                log_to_file(ALL_CELLS_FP, f'{n},{k},{entry},"{factors}",{max_factor}\n')
                 # ------------------------------------------------------------------------------------------------------
 
                 if max_factor > p_n:
-                    k = i
                     p_n = max_factor
+                    master_k = k
                     master_entry = entry
                     master_factors = factors
 
@@ -159,25 +176,23 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
             runtime = time.time() - t1  # in seconds
 
             # Log ------------------------------------------------------------------------------------------------------
-            master_data_log.write(f'{n},{k},{p_n},{growth_avg},{master_entry},"{master_factors}",{runtime}\n')
+            log_to_file(MASTER_CELLS_FP, f'{n},{master_k},{p_n},{growth_avg},{master_entry},"{master_factors}",{runtime}\n')
             # ----------------------------------------------------------------------------------------------------------
 
-            stdout = f'n={n}, k={k}\n'
+            stdout = f'n={n}, k={master_k}\n'
             stdout += f'p_n = {p_n}\n'
             stdout += f'growth avg = {growth_avg}\n'
             stdout += f'({runtime} sec)\n'
 
             # Log ------------------------------------------------------------------------------------------------------
-            stdout_log.write(stdout + '\n')
+            log_to_file(STDOUT_FP, stdout + '\n')
             # ----------------------------------------------------------------------------------------------------------
 
-            # Close log files for current iteration
-            master_data_log.close()
-            dump.close()
-            stdout_log.close()
-
+            if not LOG_DATA:
+                print('(NOT LOGGED)')
             print(stdout)
             n += 1
+        # while-loop ends here
 
         stop_reason = f'MAX DEPTH REACHED (max_depth={max_depth})'
     except KeyboardInterrupt:
@@ -190,10 +205,10 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
         end = f'{datetime.datetime.now()} {time.localtime().tm_zone}'
 
         # Get last n that was logged
-        last_n = list(pd.read_csv(master_data_fp)['n'])[-1]  # better than len(file.readlines()) or Series.max()
+        last_n = list(pd.read_csv(MASTER_CELLS_FP)['n'])[-1]  # better than len(file.readlines()) or Series.max()
 
         # Get previous run number
-        run_numbers = pd.read_csv(run_info_fp)['run']
+        run_numbers = pd.read_csv(RUN_INFO_FP)['run']
         if len(run_numbers) == 0:
             prev_run = 0  # i.e. there are no previous runs
         else:
@@ -213,9 +228,8 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=69):
             cpu_info = f'{type(e).__name__}: {e}'
 
         # Log ----------------------------------------------------------------------------------------------------------
-        with open(run_info_fp, 'a') as run_info_log:
-            stop_reason = stop_reason.replace('"', "'")  # to avoid parsing errors in CSV file
-            run_info_log.write(f'{prev_run+1},"{start}","{end}",{last_n},"{stop_reason}",{mp_threshold},"{cpu_info}"\n')
+        stop_reason = stop_reason.replace('"', "'")  # to avoid parsing errors in CSV file
+        log_to_file(RUN_INFO_FP, f'{prev_run+1},"{start}","{end}",{last_n},"{stop_reason}",{mp_threshold},"{cpu_info}"\n')
         # --------------------------------------------------------------------------------------------------------------
 
         print(stop_reason)
@@ -230,8 +244,7 @@ if __name__ == "__main__":
     main()
 
 
-# TODO: SET LOG=False WHILE TESTING
-#   ========================================================================================
+#   TODO: make mp_threshold=None and print mp_threshold at beginning of run
 #
 #   TODO: start new exploration called MasterSift that gets only master cells in the following way:
 #       - since master cells factor very quickly (under 1 sec up to n=126), we will assume that master cells up to
@@ -242,13 +255,8 @@ if __name__ == "__main__":
 #
 #   TODO: run git commands from Python to add, commit, and push after every iteration
 #
-#   TODO: open files AFTER factoring, to reduce the time that files are kept open
-#       - consider writing a function that takes a file path and a content argument, opens the file, appends to it,
-#         and closes the file. This will simplify the code. Call it append_to_file(fp, content).
-#
 #   TODO: there are many parts, especially with cado now, so just compartmentalize everything; separate functions
 #       for the following (NOTE: non-trivial = non-zero, non-power-of-2, and k<=0):
-#       - append content to a file
 #       - get non-trivial entries of row n
 #       - get list of indexes (k-coordinates) for the non-trivial cells in row n
 #       - get cado-nfs output as a list of factors

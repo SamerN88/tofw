@@ -10,7 +10,7 @@ pd.set_option("display.max_rows", None, "display.max_columns", None)  # print wh
 pd.set_option('display.precision', 16)  # high-precision floats
 
 ALL_FILEPATHS = [
-    'logs/master_data.csv',
+    'logs/master_cells.csv',
     'logs/run_info.csv',
     'logs/all_cells.csv',
     'logs/stdout.txt'
