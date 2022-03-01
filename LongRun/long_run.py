@@ -148,14 +148,22 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=None):
     # Get current run number
     run_no = get_next_run_no()
 
+    # Default stop reason, expected to change later to something meaningful
     stop_reason = 'UNKNOWN'
 
+    # Indicate if flags are off
+    if not LOG_DATA:
+        print('(NOT LOGGING DATA)')
+    if not UPDATE_GIT:
+        print('(NOT UPDATING GIT)')
+    print()
+
+    # Show parameters
+    print(f'max_depth={max_depth}')
+    print(f'mp_threshold={mp_threshold}')
+    print()
+
     try:
-        if not LOG_DATA:
-            print('(NOT LOGGING DATA)\n')
-
-        print(f'mp_threshold={mp_threshold}\n')
-
         while (max_depth is None) or (n <= max_depth):
             t1 = time.time()
 
