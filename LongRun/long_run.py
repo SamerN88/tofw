@@ -257,8 +257,6 @@ if __name__ == "__main__":
 #
 #   TODO: there are many parts, especially with cado now, so just compartmentalize everything; separate functions
 #       for the following (NOTE: non-trivial = non-zero, non-power-of-2, and k<=0):
-#       - get non-trivial entries of row n
-#       - get list of indexes (k-coordinates) for the non-trivial cells in row n
 #       - get cado-nfs output as a list of factors
 #       - one big function focused only on factoring an entry:
 #           * accepts the multiprocessing threshold parameter mp_threshold
