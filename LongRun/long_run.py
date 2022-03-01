@@ -14,12 +14,14 @@ from sympy.ntheory import factorint
 from concurrent.futures import ProcessPoolExecutor
 import psutil
 import platform
+import subprocess
 
 # Configure pandas to use high-precision floats
 pd.set_option('display.precision', 16)
 
 # False for testing, True for deployment
 LOG_DATA = False
+UPDATE_GIT = False
 
 # Define logs' file paths
 MASTER_CELLS_FP = 'logs/master_cells.csv'
@@ -80,6 +82,24 @@ def log_to_file(fp, content):
             file.write(content)
 
 
+def get_next_run_no():
+    # Get previous run number
+    run_numbers = pd.read_csv(RUN_INFO_FP)['run']
+    if len(run_numbers) == 0:
+        prev_run = 0  # i.e. there are no previous runs
+    else:
+        prev_run = list(run_numbers)[-1]  # better than len(file.readlines()) or Series.max()
+
+    return prev_run + 1
+
+
+def update_git(commit_msg):
+    if UPDATE_GIT:
+        subprocess.check_output(['git', 'add', '.'])
+        subprocess.check_output(['git', 'commit', '-m', f'"{commit_msg}"'])
+        subprocess.check_output(['git', 'push', '-u', 'origin', 'running'])  # never auto push to main
+
+
 # This function is strictly designed to communicate with outside text files in a specific way;
 # it serves a very specific purpose and is not made for general use.
 def prime_growth_data_logger(max_depth=None, mp_threshold=None):
@@ -124,6 +144,9 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=None):
     # Set n and growth_avg to most current values
     n = list(master_data_df['n'])[-1] + 1
     growth_avg = list(master_data_df['growth_avg'])[-1]
+
+    # Get current run number
+    run_no = get_next_run_no()
 
     stop_reason = 'UNKNOWN'
 
@@ -190,6 +213,9 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=None):
             log_to_file(STDOUT_FP, stdout + '\n')
             # ----------------------------------------------------------------------------------------------------------
 
+            # Auto update git repo
+            update_git(f'[AUTO] run {run_no}, n={n}')
+
             if not LOG_DATA:
                 print('(NOT LOGGED)')
             print(stdout)
@@ -209,13 +235,6 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=None):
         # Get last n that was logged
         last_n = list(pd.read_csv(MASTER_CELLS_FP)['n'])[-1]  # better than len(file.readlines()) or Series.max()
 
-        # Get previous run number
-        run_numbers = pd.read_csv(RUN_INFO_FP)['run']
-        if len(run_numbers) == 0:
-            prev_run = 0  # i.e. there are no previous runs
-        else:
-            prev_run = list(run_numbers)[-1]  # better than len(file.readlines()) or Series.max()
-
         # Get CPU info; if fails, log error
         try:
             cpu_freq = psutil.cpu_freq()
@@ -231,8 +250,11 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=None):
 
         # Log ----------------------------------------------------------------------------------------------------------
         stop_reason = stop_reason.replace('"', "'")  # to avoid parsing errors in CSV file
-        log_to_file(RUN_INFO_FP, f'{prev_run+1},"{start}","{end}",{last_n},"{stop_reason}",{mp_threshold},"{cpu_info}"\n')
+        log_to_file(RUN_INFO_FP, f'{run_no},"{start}","{end}",{last_n},"{stop_reason}",{mp_threshold},"{cpu_info}"\n')
         # --------------------------------------------------------------------------------------------------------------
+
+        # Auto update git repo
+        update_git(f'[AUTO] finish run {run_no} (n={last_n})')
 
         print(stop_reason)
         print(f'\n\nEnd run at {end}')
@@ -252,8 +274,6 @@ if __name__ == "__main__":
 #         factor, we skip it. we only factor easy cells, then find the master cell among those.
 #         * CON: this assumes that master cells will always factor in under X seconds given n=N
 #         * PRO: if our assumption holds, then this is a super expedient way to get master cells
-#
-#   TODO: run git commands from Python to add, commit, and push after every iteration
 #
 #   TODO: there are many parts, especially with cado now, so just compartmentalize everything; separate functions
 #       for the following (NOTE: non-trivial = non-zero, non-power-of-2, and k<=0):
