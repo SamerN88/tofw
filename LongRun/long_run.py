@@ -93,11 +93,11 @@ def get_next_run_no():
     return prev_run + 1
 
 
-def update_git(commit_msg):
+def update_git(commit_msg, branch='running'):
     if UPDATE_GIT:
         subprocess.check_output(['git', 'add', '.'])
         subprocess.check_output(['git', 'commit', '-m', f'"{commit_msg}"'])
-        subprocess.check_output(['git', 'push', '-u', 'origin', 'running'])  # never auto push to main
+        subprocess.check_output(['git', 'push', '-u', 'origin', branch])  # never auto push to main
 
 
 # This function is strictly designed to communicate with outside text files in a specific way;
