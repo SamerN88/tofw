@@ -20,8 +20,8 @@ import subprocess
 pd.set_option('display.precision', 16)
 
 # False for testing, True for deployment
-LOG_DATA = False
-UPDATE_GIT = False
+LOG_DATA = True
+UPDATE_GIT = True
 
 # Define logs' file paths
 MASTER_CELLS_FP = 'logs/master_cells.csv'
@@ -156,7 +156,10 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=None):
         print('(NOT LOGGING DATA)')
     if not UPDATE_GIT:
         print('(NOT UPDATING GIT)')
-    print()
+
+    # Just proper output spacing
+    if (not LOG_DATA) or (not UPDATE_GIT):
+        print()
 
     # Show parameters
     print(f'max_depth={max_depth}')
