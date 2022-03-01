@@ -266,7 +266,7 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=None):
 
 
 def main():
-    prime_growth_data_logger()
+    prime_growth_data_logger(mp_threshold=120)
 
 
 if __name__ == "__main__":
