@@ -21,7 +21,6 @@ pd.set_option('display.precision', 16)
 
 # False for testing, True for deployment
 LOG_DATA = True
-UPDATE_GIT = True
 
 # Define logs' file paths
 MASTER_CELLS_FP = 'logs/master_cells.csv'
@@ -94,9 +93,10 @@ def get_next_run_no():
 
 
 def update_git(commit_msg, branch='running'):
-    if UPDATE_GIT:
+    # Only update git if data is being logged
+    if LOG_DATA:
         subprocess.check_output(['git', 'add', '.'])
-        subprocess.check_output(['git', 'commit', '-m', f'"{commit_msg}"'])
+        subprocess.check_output(['git', 'commit', '-m', commit_msg])
         subprocess.check_output(['git', 'push', '-u', 'origin', branch])  # never auto push to main
 
 
@@ -151,19 +151,13 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=None):
     # Default stop reason, expected to change later to something meaningful
     stop_reason = 'UNKNOWN'
 
-    # Indicate if flags are off
-    if not LOG_DATA:
-        print('(NOT LOGGING DATA)')
-    if not UPDATE_GIT:
-        print('(NOT UPDATING GIT)')
-
-    # Just proper output spacing
-    if (not LOG_DATA) or (not UPDATE_GIT):
-        print()
+    # Indicate if data is being logged
+    print(f'LOG_DATA = {LOG_DATA}')
+    print()
 
     # Show parameters
-    print(f'max_depth={max_depth}')
-    print(f'mp_threshold={mp_threshold}')
+    print(f'max_depth = {max_depth}')
+    print(f'mp_threshold = {mp_threshold}')
     print()
 
     try:
