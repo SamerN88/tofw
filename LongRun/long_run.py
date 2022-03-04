@@ -6,15 +6,18 @@ Samer Najjar
 TOFW = Table of Free Weights
 """
 
-import pandas as pd
+# Python standard library
 import math
 import datetime
 import time
-from sympy.ntheory import factorint
 from concurrent.futures import ProcessPoolExecutor
-import psutil
 import platform
 import subprocess
+
+# Requires installation
+import pandas as pd
+from sympy.ntheory import factorint
+import psutil
 
 # Configure pandas to use high-precision floats
 pd.set_option('display.precision', 16)
