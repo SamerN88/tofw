@@ -59,14 +59,14 @@ def B(k, n):
     return row[0]
 
 
-# Returns the k-indexes of non-trivial values in row n (neg_k=True gets only k<=0)
-def get_k_index(n, neg_k=True):
-    return range(3-n, (0 if neg_k else n-3) + 1, 2)
+# Returns the k-indexes of non-trivial cells in row n (nonpos_k=True gets only k<=0)
+def get_k_index(n, nonpos_k=True):
+    return range(3-n, (0 if nonpos_k else n-3) + 1, 2)
 
 
-# Returns the non=trivial entries in row n (neg_k=True gets only k<=0)
-def get_row(n, neg_k=True):
-    return [B(k, n) for k in get_k_index(n, neg_k)]
+# Returns the non-trivial entries in row n (nonpos_k=True gets only k<=0)
+def get_row(n, nonpos_k=True):
+    return [B(k, n) for k in get_k_index(n, nonpos_k)]
 
 
 def read_file(fp):
@@ -184,7 +184,7 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=None):
             master_entry = None
             master_factors = None
             for k, entry, factors in zip(get_k_index(n), row, row_decomp):  # index row_decomp by each cell's k coordinate
-                max_factor = max(factors.keys())
+                max_factor = max(factors)
 
                 # Log --------------------------------------------------------------------------------------------------
                 log_to_file(ALL_CELLS_FP, f'{n},{k},{entry},"{factors}",{max_factor}\n')
