@@ -1,0 +1,2 @@
+/Library/Developer/CommandLineTools/usr/bin/ar qc libmatmul_p_9_basicp.a  CMakeFiles/matmul_p_9_basicp.dir/matmul_facade.c.o CMakeFiles/matmul_p_9_basicp.dir/matmul-basicp.cpp.o
+/Library/Developer/CommandLineTools/usr/bin/ranlib -c libmatmul_p_9_basicp.a

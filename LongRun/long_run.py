@@ -31,6 +31,9 @@ RUN_INFO_FP = 'logs/run_info.csv'
 ALL_CELLS_FP = 'logs/all_cells.csv'
 STDOUT_FP = 'logs/stdout.txt'
 
+# Define cado-nfs file path
+CADO_NFS_FP = '../cado-nfs-master/cado-nfs.py'
+
 
 # Returns the value at coordinate k on row n=1 (defined in Burton's paper)
 def b(k: int) -> int:
@@ -70,6 +73,13 @@ def get_k_index(n, nonpos_k=True):
 # Returns the non-trivial entries in row n (nonpos_k=True gets only k<=0)
 def get_row(n, nonpos_k=True):
     return [B(k, n) for k in get_k_index(n, nonpos_k)]
+
+
+# From cado-nfs project: https://gitlab.inria.fr/cado-nfs/cado-nfs
+def cado_factor(n):
+    output = subprocess.check_output(['python3', CADO_NFS_FP, str(n), '--screenlog', 'WARNING'])
+    output = output.decode("utf-8")
+    return sorted([int(i) for i in output.split()])
 
 
 def read_file(fp):
@@ -273,7 +283,8 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    print(cado_factor(17113636163329171307055067007779498398991498581710873599122232450394704))
+    # main()
 
 
 #   TODO: start new exploration called MasterSift that gets only master cells in the following way:
