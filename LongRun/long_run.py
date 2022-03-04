@@ -107,10 +107,10 @@ def get_next_run_no():
 
 def update_git(commit_msg, branch='running'):
     # Only update git if data is being logged
-    if LOG_DATA:
-        subprocess.check_output(['git', 'add', '.'])
-        subprocess.check_output(['git', 'commit', '-m', commit_msg])
-        subprocess.check_output(['git', 'push', '-u', 'origin', branch])  # never auto push to main
+    if LOG_DATA:                             # silence output
+        subprocess.call(['git', 'add', '.'], stdout=subprocess.DEVNULL)
+        subprocess.call(['git', 'commit', '-m', commit_msg], stdout=subprocess.DEVNULL)
+        subprocess.call(['git', 'push', '-u', 'origin', branch], stdout=subprocess.DEVNULL)  # never auto push to main
 
 
 # This function is strictly designed to communicate with outside text files in a specific way;
@@ -296,21 +296,7 @@ if __name__ == "__main__":
 #
 #   TODO: there are many parts, especially with cado now, so just compartmentalize everything; separate functions
 #       for the following (NOTE: non-trivial = non-zero, non-power-of-2, and k<=0):
-#       - get cado-nfs output as a list of factors
 #       - one big function focused only on factoring an entry:
 #           * accepts the multiprocessing threshold parameter mp_threshold
 #           * contains all sympy and cado implementation
 #
-#   TODO: implement cado: cado factors as many cells as possible, gives the rest to sympy
-#       - figure out how to silence cado messages and just capture output
-#       - use code snippet below to get factors as a list:
-#
-#     import subprocess
-#
-#     n = 17113636163329171307055067007779498398991498581710873599122232450394704
-#
-#     output = subprocess.check_output(['python3', 'cado-nfs.py', str(n), '--screenlog', 'WARNING'])
-#     output = output.decode("utf-8")
-#
-#     factors = [int(i) for i in output.split()]
-#     print(factors)
