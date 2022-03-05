@@ -13,6 +13,7 @@ import time
 from concurrent.futures import ProcessPoolExecutor
 import platform
 import subprocess
+import multiprocessing
 
 # Requires installation
 import pandas as pd
@@ -34,6 +35,8 @@ STDOUT_FP = 'logs/stdout.txt'
 # Define cado-nfs file path
 CADO_NFS_FP = '../cado-nfs-master/cado-nfs.py'
 
+
+# TOFW OPERATIONS ======================================================================================================
 
 # Returns the value at coordinate k on row n=1 (defined in Burton's paper)
 def b(k: int) -> int:
@@ -75,12 +78,71 @@ def get_row(n, nonpos_k=True):
     return [B(k, n) for k in get_k_index(n, nonpos_k)]
 
 
+# FACTORING ============================================================================================================
+
+def timeout_factorint(n, timeout):
+    # Spawn process to factor number, and start it
+    process = multiprocessing.Process(target=factorint, args=(n,))
+    process.start()
+
+    # Pause execution of main program until process completes or until timeout
+    process.join(timeout)
+
+    # If process is still alive at this point, then it timed out so terminate the process and return None
+    if process.is_alive():
+        process.terminate()
+        process.join()  # make sure process terminates before moving on
+        return None
+    else:
+        # Otherwise, return complete factorization
+        # (INEFFICIENCY: factors the number again, doubling required time)
+        return factorint(n)
+
+
 # From cado-nfs project: https://gitlab.inria.fr/cado-nfs/cado-nfs
-def cado_factor(n):
+def cado_nfs(n):
     output = subprocess.check_output(['python3', CADO_NFS_FP, str(n), '--screenlog', 'WARNING'])
     output = output.decode("utf-8")
     return sorted([int(i) for i in output.split()])
 
+
+def corrected_cado_factor(n, *, timeout=5):
+    # Check if factorint can factor entry within the timeout length; if not, use cado-nfs
+    factors = timeout_factorint(n, timeout=timeout)
+    if factors is not None:
+        return factors
+
+    # If factorint did not factor it fast enough, use cado-nfs (below)
+
+    def product(it):
+        prod = 1
+        for k in it:
+            prod *= k
+        return prod
+
+    try:
+        cado_factors = cado_nfs(n)
+
+        # For some numbers, cado-nfs just can't get any factors; in that case, just use factorint
+        if len(cado_factors) == 0:
+            return factorint(n)
+
+        remaining = n // product(cado_factors)
+        factors = factorint(remaining)
+
+        for f in cado_factors:
+            try:
+                factors[f] += 1
+            except KeyError:
+                factors[f] = 1
+    except:
+        # If for whatever reason cado-nfs fails (e.g. if number is too small) then just use factorint anyway
+        return factorint(n)
+
+    return factors
+
+
+# DATA LOGGING =========================================================================================================
 
 def read_file(fp):
     with open(fp, 'r') as file:
@@ -283,8 +345,7 @@ def main():
 
 
 if __name__ == "__main__":
-    print(cado_factor(17113636163329171307055067007779498398991498581710873599122232450394704))
-    # main()
+    main()
 
 
 #   TODO: start new exploration called MasterSift that gets only master cells in the following way:
@@ -293,10 +354,4 @@ if __name__ == "__main__":
 #         factor, we skip it. we only factor easy cells, then find the master cell among those.
 #         * CON: this assumes that master cells will always factor in under X seconds given n=N
 #         * PRO: if our assumption holds, then this is a super expedient way to get master cells
-#
-#   TODO: there are many parts, especially with cado now, so just compartmentalize everything; separate functions
-#       for the following (NOTE: non-trivial = non-zero, non-power-of-2, and k<=0):
-#       - one big function focused only on factoring an entry:
-#           * accepts the multiprocessing threshold parameter mp_threshold
-#           * contains all sympy and cado implementation
 #
