@@ -1,2 +1,0 @@
-/Library/Developer/CommandLineTools/usr/bin/ar qc libmatmul_p_10_zone.a  CMakeFiles/matmul_p_10_zone.dir/matmul_facade.c.o CMakeFiles/matmul_p_10_zone.dir/matmul-zone.cpp.o
-/Library/Developer/CommandLineTools/usr/bin/ranlib -c libmatmul_p_10_zone.a

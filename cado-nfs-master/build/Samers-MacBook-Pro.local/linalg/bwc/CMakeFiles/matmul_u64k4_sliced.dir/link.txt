@@ -1,2 +1,0 @@
-/Library/Developer/CommandLineTools/usr/bin/ar qc libmatmul_u64k4_sliced.a  CMakeFiles/matmul_u64k4_sliced.dir/matmul_facade.c.o CMakeFiles/matmul_u64k4_sliced.dir/matmul-sliced.cpp.o
-/Library/Developer/CommandLineTools/usr/bin/ranlib -c libmatmul_u64k4_sliced.a
