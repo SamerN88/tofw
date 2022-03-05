@@ -31,8 +31,8 @@ RUN_INFO_FP = 'logs/run_info.csv'
 ALL_CELLS_FP = 'logs/all_cells.csv'
 STDOUT_FP = 'logs/stdout.txt'
 
-# Define cado-nfs file path
-CADO_NFS_FP = '../cado-nfs-master/cado-nfs.py'
+# Define cado-nfs file path (may have to modify between git pulls)
+CADO_NFS_FP = '../../cado-nfs/cado-nfs.py'
 
 
 # TOFW OPERATIONS ======================================================================================================
