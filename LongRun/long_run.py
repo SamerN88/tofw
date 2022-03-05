@@ -236,9 +236,19 @@ def prime_growth_data_logger(max_depth=None):
         while (max_depth is None) or (n <= max_depth):
             t1 = time.time()
 
-            # Generate non-trivial entries in row n (only k<=0), then factor entries
+            # Get k-coordinates of non-trivial entries
+            k_index = get_k_index(n)
+
+            # Generate non-trivial entries in row n (only k<=0)
             row = get_row(n)
-            row_decomp = [corrected_cado_factor(e) for e in row]
+
+            # Factor entries in row, and show progress
+            row_decomp = []
+            for k, entry in zip(k_index, row):
+                factors = corrected_cado_factor(entry)
+                row_decomp.append(factors)
+                print(f'  (n={n}) Progress:  @ k={k}')
+            print()
 
             # Find the master cell and extract desired values. Initialize p_n as 2 and other values as None so
             # if no master cell is found for whatever reason, it is visible in the logs
@@ -246,7 +256,7 @@ def prime_growth_data_logger(max_depth=None):
             master_k = None
             master_entry = None
             master_factors = None
-            for k, entry, factors in zip(get_k_index(n), row, row_decomp):  # index row_decomp by each cell's k coordinate
+            for k, entry, factors in zip(k_index, row, row_decomp):  # index row_decomp by each cell's k coordinate
                 max_factor = max(factors)
 
                 # Log --------------------------------------------------------------------------------------------------
