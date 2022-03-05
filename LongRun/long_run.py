@@ -339,6 +339,13 @@ def prime_growth_data_logger(max_depth=None):
 
 
 def main():
+    # Safety net; must confirm data logging before updating git
+    if LOG_DATA:
+        confirm = input('LOG_DATA is True; are you sure you want to update git? [y/n]: ')
+        if confirm == '' or confirm.strip()[0].lower() != 'y':
+            exit()
+        print('*'*77 + '\n')
+
     prime_growth_data_logger()
 
 
