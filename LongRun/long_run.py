@@ -23,7 +23,7 @@ import psutil
 pd.set_option('display.precision', 16)
 
 # False for testing, True for deployment
-LOG_DATA = True
+LOG_DATA = False
 
 # Define logs' file paths
 MASTER_CELLS_FP = 'logs/master_cells.csv'
@@ -232,7 +232,6 @@ def prime_growth_data_logger(max_depth=None):
     print(f'max_depth = {max_depth}')
     print()
 
-    n = 30
     try:
         while (max_depth is None) or (n <= max_depth):
             t1 = time.time()
