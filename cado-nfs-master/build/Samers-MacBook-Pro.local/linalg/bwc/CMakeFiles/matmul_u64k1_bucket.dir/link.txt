@@ -1,2 +1,0 @@
-/Library/Developer/CommandLineTools/usr/bin/ar qc libmatmul_u64k1_bucket.a  CMakeFiles/matmul_u64k1_bucket.dir/matmul_facade.c.o CMakeFiles/matmul_u64k1_bucket.dir/matmul-bucket.cpp.o
-/Library/Developer/CommandLineTools/usr/bin/ranlib -c libmatmul_u64k1_bucket.a
