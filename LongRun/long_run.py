@@ -10,7 +10,6 @@ TOFW = Table of Free Weights
 import math
 import datetime
 import time
-from concurrent.futures import ProcessPoolExecutor
 import platform
 import subprocess
 import multiprocessing
@@ -177,7 +176,9 @@ def update_git(commit_msg, branch='running'):
 
 # This function is strictly designed to communicate with outside text files in a specific way;
 # it serves a very specific purpose and is not made for general use.
-def prime_growth_data_logger(max_depth=None, mp_threshold=None):
+# (NOTE: removed multiprocessing implementation because the cado-nfs implementation is already
+# multi-threaded; using multiprocessing on row decomposition would choke the CPU)
+def prime_growth_data_logger(max_depth=None):
     """
     The growth average metric (growth_avg) is the quantity
 
@@ -226,31 +227,18 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=None):
     # Default stop reason, expected to change later to something meaningful
     stop_reason = 'UNKNOWN'
 
-    # Indicate if data is being logged
+    # Indicate if data is being logged, and show max_depth parameter
     print(f'LOG_DATA = {LOG_DATA}')
-    print()
-
-    # Show parameters
     print(f'max_depth = {max_depth}')
-    print(f'mp_threshold = {mp_threshold}')
     print()
 
     try:
         while (max_depth is None) or (n <= max_depth):
             t1 = time.time()
 
-            # Generate non-trivial entries in row n (only k<=0)
+            # Generate non-trivial entries in row n (only k<=0), then factor entries
             row = get_row(n)
-
-            # At low values of n, the overhead from multiprocessing actually takes longer than factoring the row
-            # synchronously, so we only let multiprocessing kick in at a higher n when factoring synchronously
-            # gets sufficiently slow.
-            if (mp_threshold is None) or (n < mp_threshold):
-                row_decomp = [factorint(e) for e in row]
-            else:
-                # Factor the entries in row n using multiprocessing (for speed)
-                with ProcessPoolExecutor() as pool:  # by default max_workers=min(32, os.cpu_count() + 4)
-                    row_decomp = pool.map(factorint, row)
+            row_decomp = [corrected_cado_factor(e) for e in row]
 
             # Find the master cell and extract desired values. Initialize p_n as 2 and other values as None so
             # if no master cell is found for whatever reason, it is visible in the logs
@@ -330,7 +318,7 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=None):
 
         # Log ----------------------------------------------------------------------------------------------------------
         stop_reason = stop_reason.replace('"', "'")  # to avoid parsing errors in CSV file
-        log_to_file(RUN_INFO_FP, f'{run_no},"{start}","{end}",{last_n},"{stop_reason}",{mp_threshold},"{cpu_info}"\n')
+        log_to_file(RUN_INFO_FP, f'{run_no},"{start}","{end}",{last_n},"{stop_reason}",N/A,"{cpu_info}"\n')
         # --------------------------------------------------------------------------------------------------------------
 
         # Auto update git repo
