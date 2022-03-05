@@ -23,7 +23,7 @@ import psutil
 pd.set_option('display.precision', 16)
 
 # False for testing, True for deployment
-LOG_DATA = False
+LOG_DATA = True
 
 # Define logs' file paths
 MASTER_CELLS_FP = 'logs/master_cells.csv'
