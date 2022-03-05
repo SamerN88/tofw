@@ -6,21 +6,24 @@ Samer Najjar
 TOFW = Table of Free Weights
 """
 
-import pandas as pd
+# Python standard library
 import math
 import datetime
 import time
-from sympy.ntheory import factorint
-from concurrent.futures import ProcessPoolExecutor
-import psutil
 import platform
 import subprocess
+import multiprocessing
+
+# Requires installation
+import pandas as pd
+from sympy.ntheory import factorint
+import psutil
 
 # Configure pandas to use high-precision floats
 pd.set_option('display.precision', 16)
 
 # False for testing, True for deployment
-LOG_DATA = True
+LOG_DATA = False
 
 # Define logs' file paths
 MASTER_CELLS_FP = 'logs/master_cells.csv'
@@ -28,6 +31,11 @@ RUN_INFO_FP = 'logs/run_info.csv'
 ALL_CELLS_FP = 'logs/all_cells.csv'
 STDOUT_FP = 'logs/stdout.txt'
 
+# Define cado-nfs file path
+CADO_NFS_FP = '../cado-nfs-master/cado-nfs.py'
+
+
+# TOFW OPERATIONS ======================================================================================================
 
 # Returns the value at coordinate k on row n=1 (defined in Burton's paper)
 def b(k: int) -> int:
@@ -59,15 +67,81 @@ def B(k, n):
     return row[0]
 
 
-# Returns the k-indexes of non-trivial values in row n (neg_k=True gets only k<=0)
-def get_k_index(n, neg_k=True):
-    return range(3-n, (0 if neg_k else n-3) + 1, 2)
+# Returns the k-indexes of non-trivial cells in row n (nonpos_k=True gets only k<=0)
+def get_k_index(n, nonpos_k=True):
+    return range(3-n, (0 if nonpos_k else n-3) + 1, 2)
 
 
-# Returns the non=trivial entries in row n (neg_k=True gets only k<=0)
-def get_row(n, neg_k=True):
-    return [B(k, n) for k in get_k_index(n, neg_k)]
+# Returns the non-trivial entries in row n (nonpos_k=True gets only k<=0)
+def get_row(n, nonpos_k=True):
+    return [B(k, n) for k in get_k_index(n, nonpos_k)]
 
+
+# FACTORING ============================================================================================================
+
+def timeout_factorint(n, timeout):
+    # Spawn process to factor number, and start it
+    process = multiprocessing.Process(target=factorint, args=(n,))
+    process.start()
+
+    # Pause execution of main program until process completes or until timeout
+    process.join(timeout)
+
+    # If process is still alive at this point, then it timed out so terminate the process and return None
+    if process.is_alive():
+        process.terminate()
+        process.join()  # make sure process terminates before moving on
+        return None
+    else:
+        # Otherwise, return complete factorization
+        # (INEFFICIENCY: factors the number again, doubling required time)
+        return factorint(n)
+
+
+# From cado-nfs project: https://gitlab.inria.fr/cado-nfs/cado-nfs
+def cado_nfs(n):
+    output = subprocess.check_output(['python3', CADO_NFS_FP, str(n), '--screenlog', 'WARNING'])
+    output = output.decode("utf-8")
+    return sorted([int(i) for i in output.split()])
+
+
+def corrected_cado_factor(n, *, timeout=5):
+    # Check if factorint can factor entry within the timeout length; if not, use cado-nfs
+    factors = timeout_factorint(n, timeout=timeout)
+    if factors is not None:
+        return factors
+
+    # If factorint did not factor it fast enough, use cado-nfs (below)
+
+    def product(it):
+        prod = 1
+        for k in it:
+            prod *= k
+        return prod
+
+    try:
+        cado_factors = cado_nfs(n)
+
+        # For some numbers, cado-nfs just can't get any factors; in that case, just use factorint
+        if len(cado_factors) == 0:
+            return factorint(n)
+
+        remaining = n // product(cado_factors)
+        factors = factorint(remaining)
+
+        for f in cado_factors:
+            try:
+                factors[f] += 1
+            except KeyError:
+                factors[f] = 1
+    except:
+        # If for whatever reason cado-nfs fails (e.g. if number is too small) then just use factorint anyway
+        return factorint(n)
+
+    return factors
+
+
+# DATA LOGGING =========================================================================================================
 
 def read_file(fp):
     with open(fp, 'r') as file:
@@ -94,15 +168,17 @@ def get_next_run_no():
 
 def update_git(commit_msg, branch='running'):
     # Only update git if data is being logged
-    if LOG_DATA:
-        subprocess.check_output(['git', 'add', '.'])
-        subprocess.check_output(['git', 'commit', '-m', commit_msg])
-        subprocess.check_output(['git', 'push', '-u', 'origin', branch])  # never auto push to main
+    if LOG_DATA:                             # silence output
+        subprocess.call(['git', 'add', '.'], stdout=subprocess.DEVNULL)
+        subprocess.call(['git', 'commit', '-m', commit_msg], stdout=subprocess.DEVNULL)
+        subprocess.call(['git', 'push', '-u', 'origin', branch], stdout=subprocess.DEVNULL)  # never auto push to main
 
 
 # This function is strictly designed to communicate with outside text files in a specific way;
 # it serves a very specific purpose and is not made for general use.
-def prime_growth_data_logger(max_depth=None, mp_threshold=None):
+# (NOTE: removed multiprocessing implementation because the cado-nfs implementation is already
+# multi-threaded; using multiprocessing on row decomposition would choke the CPU)
+def prime_growth_data_logger(max_depth=None):
     """
     The growth average metric (growth_avg) is the quantity
 
@@ -151,31 +227,28 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=None):
     # Default stop reason, expected to change later to something meaningful
     stop_reason = 'UNKNOWN'
 
-    # Indicate if data is being logged
+    # Indicate if data is being logged, and show max_depth parameter
     print(f'LOG_DATA = {LOG_DATA}')
-    print()
-
-    # Show parameters
     print(f'max_depth = {max_depth}')
-    print(f'mp_threshold = {mp_threshold}')
     print()
 
     try:
         while (max_depth is None) or (n <= max_depth):
             t1 = time.time()
 
+            # Get k-coordinates of non-trivial entries
+            k_index = get_k_index(n)
+
             # Generate non-trivial entries in row n (only k<=0)
             row = get_row(n)
 
-            # At low values of n, the overhead from multiprocessing actually takes longer than factoring the row
-            # synchronously, so we only let multiprocessing kick in at a higher n when factoring synchronously
-            # gets sufficiently slow.
-            if (mp_threshold is None) or (n < mp_threshold):
-                row_decomp = [factorint(e) for e in row]
-            else:
-                # Factor the entries in row n using multiprocessing (for speed)
-                with ProcessPoolExecutor() as pool:  # by default max_workers=min(32, os.cpu_count() + 4)
-                    row_decomp = pool.map(factorint, row)
+            # Factor entries in row, and show progress
+            row_decomp = []
+            for k, entry in zip(k_index, row):
+                factors = corrected_cado_factor(entry)
+                row_decomp.append(factors)
+                print(f'  (n={n}) Progress:  @ k={k}')
+            print()
 
             # Find the master cell and extract desired values. Initialize p_n as 2 and other values as None so
             # if no master cell is found for whatever reason, it is visible in the logs
@@ -183,8 +256,8 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=None):
             master_k = None
             master_entry = None
             master_factors = None
-            for k, entry, factors in zip(get_k_index(n), row, row_decomp):  # index row_decomp by each cell's k coordinate
-                max_factor = max(factors.keys())
+            for k, entry, factors in zip(k_index, row, row_decomp):  # index row_decomp by each cell's k coordinate
+                max_factor = max(factors)
 
                 # Log --------------------------------------------------------------------------------------------------
                 log_to_file(ALL_CELLS_FP, f'{n},{k},{entry},"{factors}",{max_factor}\n')
@@ -255,7 +328,7 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=None):
 
         # Log ----------------------------------------------------------------------------------------------------------
         stop_reason = stop_reason.replace('"', "'")  # to avoid parsing errors in CSV file
-        log_to_file(RUN_INFO_FP, f'{run_no},"{start}","{end}",{last_n},"{stop_reason}",{mp_threshold},"{cpu_info}"\n')
+        log_to_file(RUN_INFO_FP, f'{run_no},"{start}","{end}",{last_n},"{stop_reason}",N/A,"{cpu_info}"\n')
         # --------------------------------------------------------------------------------------------------------------
 
         # Auto update git repo
@@ -266,7 +339,14 @@ def prime_growth_data_logger(max_depth=None, mp_threshold=None):
 
 
 def main():
-    prime_growth_data_logger(mp_threshold=120)
+    # Safety net; must confirm data logging before updating git
+    if LOG_DATA:
+        confirm = input('LOG_DATA is True; are you sure you want to update git? [y/n]: ')
+        if confirm == '' or confirm.strip()[0].lower() != 'y':
+            exit()
+        print('*'*77 + '\n')
+
+    prime_growth_data_logger()
 
 
 if __name__ == "__main__":
@@ -280,23 +360,3 @@ if __name__ == "__main__":
 #         * CON: this assumes that master cells will always factor in under X seconds given n=N
 #         * PRO: if our assumption holds, then this is a super expedient way to get master cells
 #
-#   TODO: there are many parts, especially with cado now, so just compartmentalize everything; separate functions
-#       for the following (NOTE: non-trivial = non-zero, non-power-of-2, and k<=0):
-#       - get cado-nfs output as a list of factors
-#       - one big function focused only on factoring an entry:
-#           * accepts the multiprocessing threshold parameter mp_threshold
-#           * contains all sympy and cado implementation
-#
-#   TODO: implement cado: cado factors as many cells as possible, gives the rest to sympy
-#       - figure out how to silence cado messages and just capture output
-#       - use code snippet below to get factors as a list:
-#
-#     import subprocess
-#
-#     n = 17113636163329171307055067007779498398991498581710873599122232450394704
-#
-#     output = subprocess.check_output(['python3', 'cado-nfs.py', str(n), '--screenlog', 'WARNING'])
-#     output = output.decode("utf-8")
-#
-#     factors = [int(i) for i in output.split()]
-#     print(factors)

@@ -1,0 +1,13 @@
+# CMake generated Testfile for 
+# Source directory: /Users/samernajjar/Desktop/cado-nfs-master/tests/filter
+# Build directory: /Users/samernajjar/Desktop/cado-nfs-master/build/Samers-MBP/tests/filter
+# 
+# This file includes the relevant testing commands required for 
+# testing this directory and lists subdirectories to be tested as well.
+add_test(builddep_testsm "/Users/samernajjar/Desktop/cado-nfs-master/cmake-installed/bin/cmake" "--build" "/Users/samernajjar/Desktop/cado-nfs-master/build/Samers-MBP" "--target" "testsm_dependencies")
+add_test(testsm "env" "CADO_NFS_SOURCE_DIR=/Users/samernajjar/Desktop/cado-nfs-master" "CADO_NFS_BINARY_DIR=/Users/samernajjar/Desktop/cado-nfs-master/build/Samers-MBP" "CMAKE_CURRENT_SOURCE_DIR=/Users/samernajjar/Desktop/cado-nfs-master/tests/filter" "CMAKE_CURRENT_BINARY_DIR=/Users/samernajjar/Desktop/cado-nfs-master/build/Samers-MBP/tests/filter" "PROJECT_BINARY_DIR=/Users/samernajjar/Desktop/cado-nfs-master/build/Samers-MBP" "env" "bash" "/Users/samernajjar/Desktop/cado-nfs-master/tests/filter/testsm.sh" "/Users/samernajjar/Desktop/cado-nfs-master/build/Samers-MBP/filter/sm")
+set_tests_properties(testsm PROPERTIES  DEPENDS "builddep_testsm" SKIP_RETURN_CODE "125")
+add_test(builddep_test_dup2 "/Users/samernajjar/Desktop/cado-nfs-master/cmake-installed/bin/cmake" "--build" "/Users/samernajjar/Desktop/cado-nfs-master/build/Samers-MBP" "--target" "test_dup2_dependencies")
+add_test(builddep_test_dup2_c105_30004 "/Users/samernajjar/Desktop/cado-nfs-master/cmake-installed/bin/cmake" "--build" "/Users/samernajjar/Desktop/cado-nfs-master/build/Samers-MBP" "--target" "test_dup2_c105_30004_dependencies")
+add_test(test_dup2_c105_30004 "env" "CADO_NFS_SOURCE_DIR=/Users/samernajjar/Desktop/cado-nfs-master" "CADO_NFS_BINARY_DIR=/Users/samernajjar/Desktop/cado-nfs-master/build/Samers-MBP" "CMAKE_CURRENT_SOURCE_DIR=/Users/samernajjar/Desktop/cado-nfs-master/tests/filter" "CMAKE_CURRENT_BINARY_DIR=/Users/samernajjar/Desktop/cado-nfs-master/build/Samers-MBP/tests/filter" "PROJECT_BINARY_DIR=/Users/samernajjar/Desktop/cado-nfs-master/build/Samers-MBP" "/Users/samernajjar/Desktop/cado-nfs-master/tests/provide-wdir.sh" "--env" "WORKDIR" "env" "bash" "/Users/samernajjar/Desktop/cado-nfs-master/tests/filter/test_dup2.sh" "-b" "/Users/samernajjar/Desktop/cado-nfs-master/build/Samers-MBP" "-poly" "/Users/samernajjar/Desktop/cado-nfs-master/tests/filter/p40_30004.poly" "-rels" "/Users/samernajjar/Desktop/cado-nfs-master/tests/filter/p40_30004.rels.gz" "-lpbs" "14,14" "-dl" "-S" "c8c5a0aa4750790e8e5e150bf13de7b1e77ade01" "-R" "b40784b0e")
+set_tests_properties(test_dup2_c105_30004 PROPERTIES  DEPENDS "builddep_test_dup2_c105_30004" SKIP_RETURN_CODE "125")
