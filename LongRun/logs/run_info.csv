@@ -17,3 +17,4 @@ run,start,end,last_n,stop_reason,mp_threshold,cpu_info
 16,"2022-03-01 07:18:29.474109 UTC","2022-03-05 03:10:31.885356 UTC",129,"PROCESS STOPPED BY USER",120,"{'cores': 6, 'current_freq': 3.6995, 'max_freq': 3700.0, 'min_freq': 800.0, 'os': 'Linux'}"
 17,"2022-03-05 03:28:57.508035 UTC","2022-03-05 03:30:45.010338 UTC",129,"PROCESS STOPPED BY USER",N/A,"{'cores': 6, 'current_freq': 3.7007500000000007, 'max_freq': 3700.0, 'min_freq': 800.0, 'os': 'Linux'}"
 18,"2022-03-05 04:28:25.859527 UTC","2022-03-07 02:10:19.015781 UTC",147,"PROCESS STOPPED BY USER",N/A,"{'cores': 6, 'current_freq': 3.699416666666666, 'max_freq': 3700.0, 'min_freq': 800.0, 'os': 'Linux'}"
+19,"2022-03-07 02:30:15.009559 UTC","2022-03-07 19:45:53.660074 UTC",151,"PROCESS STOPPED BY USER",N/A,"{'cores': 6, 'current_freq': 3.699333333333333, 'max_freq': 3700.0, 'min_freq': 800.0, 'os': 'Linux'}"
