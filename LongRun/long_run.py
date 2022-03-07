@@ -31,7 +31,7 @@ RUN_INFO_FP = 'logs/run_info.csv'
 ALL_CELLS_FP = 'logs/all_cells.csv'
 STDOUT_FP = 'logs/stdout.txt'
 
-# Define cado-nfs file path (may have to modify between git pulls)
+# Define cado-nfs file path (relative path; must be updated if location of cado-nfs/ changes)
 CADO_NFS_FP = '../../cado-nfs/cado-nfs.py'
 
 
@@ -94,7 +94,8 @@ def timeout_factorint(n, timeout):
         return None
     else:
         # Otherwise, return complete factorization
-        # (INEFFICIENCY: factors the number again, doubling required time)
+        # (INEFFICIENCY: can't extract return value from initial subprocess,
+        # so must factor number again, doubling the runtime)
         return factorint(n)
 
 
@@ -105,7 +106,7 @@ def cado_nfs(n):
     return sorted([int(i) for i in output.split()])
 
 
-def corrected_cado_factor(n, *, timeout=5):
+def corrected_cado_factor(n, *, timeout=15):
     # Check if factorint can factor entry within the timeout length; if not, use cado-nfs
     factors = timeout_factorint(n, timeout=timeout)
     if factors is not None:
@@ -168,10 +169,10 @@ def get_next_run_no():
 
 def update_git(commit_msg, branch='running'):
     # Only update git if data is being logged
-    if LOG_DATA:                             # silence output
-        subprocess.call(['git', 'add', '.'], stdout=subprocess.DEVNULL)
-        subprocess.call(['git', 'commit', '-m', commit_msg], stdout=subprocess.DEVNULL)
-        subprocess.call(['git', 'push', '-u', 'origin', branch], stdout=subprocess.DEVNULL)  # never auto push to main
+    if LOG_DATA:
+        subprocess.call(['git', 'add', '.'])
+        subprocess.call(['git', 'commit', '-m', commit_msg])
+        subprocess.call(['git', 'push', '-u', 'origin', branch])  # never auto push to main
 
 
 # This function is strictly designed to communicate with outside text files in a specific way;
