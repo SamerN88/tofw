@@ -101,45 +101,54 @@ def timeout_factorint(n, timeout):
 
 # From cado-nfs project: https://gitlab.inria.fr/cado-nfs/cado-nfs
 def cado_nfs(n):
-    output = subprocess.check_output(['python3', CADO_NFS_FP, str(n), '--screenlog', 'WARNING'])
+    output = subprocess.check_output(['python3', CADO_NFS_FP, str(n), '--screenlog', 'ERROR'])
     output = output.decode("utf-8")
     return sorted([int(i) for i in output.split()])
 
 
-def corrected_cado_factor(n, *, timeout=15):
-    # Check if factorint can factor entry within the timeout length; if not, use cado-nfs
+def corrected_cado_factor(n, *, timeout=15, return_method_used=False):
+    # Check if sympy's factorint can factor entry within the timeout length; if not, use cado-nfs
     factors = timeout_factorint(n, timeout=timeout)
     if factors is not None:
-        return factors
+        method_used = 'sympy'
+        # DONE, skip to return
+    else:
+        # If sympy's factorint did not factor it fast enough, use cado-nfs (below)
 
-    # If factorint did not factor it fast enough, use cado-nfs (below)
+        def product(it):
+            prod = 1
+            for k in it:
+                prod *= k
+            return prod
 
-    def product(it):
-        prod = 1
-        for k in it:
-            prod *= k
-        return prod
+        try:
+            cado_factors = cado_nfs(n)
 
-    try:
-        cado_factors = cado_nfs(n)
+            # In case cado-nfs returns an empty list, just use sympy's factorint
+            if len(cado_factors) == 0:
+                factors = factorint(n)
+                method_used = 'sympy'
+                # DONE, skip to return
+            else:
+                # Otherwise, find the remaining small factors with sympy's factorint
+                remaining = n // product(cado_factors)
+                factors = factorint(remaining)
 
-        # For some numbers, cado-nfs just can't get any factors; in that case, just use factorint
-        if len(cado_factors) == 0:
-            return factorint(n)
+                for f in cado_factors:
+                    try:
+                        factors[f] += 1
+                    except KeyError:
+                        factors[f] = 1
 
-        remaining = n // product(cado_factors)
-        factors = factorint(remaining)
+                method_used = 'cado'
+                # DONE, skip to return
+        except:
+            # If for whatever reason cado-nfs fails (e.g. if number is too small), just use sympy's factorint
+            factors = factorint(n)
+            method_used = 'sympy'
+            # DONE, skip to return
 
-        for f in cado_factors:
-            try:
-                factors[f] += 1
-            except KeyError:
-                factors[f] = 1
-    except:
-        # If for whatever reason cado-nfs fails (e.g. if number is too small) then just use factorint anyway
-        return factorint(n)
-
-    return factors
+    return (factors, method_used) if return_method_used else factors
 
 
 # DATA LOGGING =========================================================================================================
@@ -246,9 +255,9 @@ def prime_growth_data_logger(max_depth=None):
             # Factor entries in row, and show progress
             row_decomp = []
             for k, entry in zip(k_index, row):
-                factors = corrected_cado_factor(entry)
+                factors, method_used = corrected_cado_factor(entry, return_method_used=True)
                 row_decomp.append(factors)
-                print(f'  (n={n}) Progress:  @ k={k}')
+                print(f'  (n={n}) Progress:  @ k={k} [{method_used}]')
             print()
 
             # Find the master cell and extract desired values. Initialize p_n as 2 and other values as None so
