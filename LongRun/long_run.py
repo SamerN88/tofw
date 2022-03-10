@@ -208,6 +208,7 @@ def prime_growth_data_logger(max_depth=None):
         runtime: the time it took to compute everything for row n in seconds
     """
 
+    # Argument validation
     if (max_depth is not None) and (max_depth < 1):
         msg = 'max_depth argument must be at least 1 (row index starts at 1)'
         raise ValueError(msg)
@@ -355,6 +356,13 @@ def main():
         if confirm == '' or confirm.strip()[0].lower() != 'y':
             exit()
         print('*'*77 + '\n')
+
+        # Check if logs are in sync before continuing
+        last_n = list(pd.read_csv(RUN_INFO_FP)['last_n'])[-1]
+        max_n = list(pd.read_csv(MASTER_CELLS_FP)['n'])[-1]
+        if last_n != max_n:
+            print(f'DATA LOGS OUT OF SYNC: check "n" in {MASTER_CELLS_FP} and "last_n" in {RUN_INFO_FP}')
+            exit()
 
     prime_growth_data_logger()
 
