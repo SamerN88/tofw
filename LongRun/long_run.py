@@ -1,9 +1,31 @@
 """
-Free Weight Cellular Automaton - Computational Exploration
+LongRun
 Samer Najjar
-21 May 2021
+30 January 2022
 
-TOFW = Table of Free Weights
+This exploration aims to find master cells by factoring all non-trivial entries
+in each row and finding the one with largest prime factor. Also measures the
+growth average of the master prime against 4^n in the long run.
+
+The growth average metric (growth_avg) is the quantity
+
+    (1 / log(4)X) sum_{n=1}^X log(p_n)/n
+
+    where p_n is the largest prime factor in row n and X is the number of rows over which we average
+    the quantity log(p_n)/log(4)n which is a measure of how close the growth of p_n is to 4^n (the
+    closer this quantity is to 1, the closer the growth is to 4^n).
+
+    Master cells data that is logged:
+        n: row index (of master cell)
+        k: column index (of master cell)
+        p_n: largest prime factor in row n
+        growth_avg: the metric by which we measure the growth of p_n against 4^n
+        entry: the output of B(k, n), i.e. the value at cell (k, n) of which p_n is a factor
+        factors: prime factorization of the entry (as a dictionary)
+        runtime: the time it took to compute everything for row n in seconds
+
+    This exploration assumes the following conjecture:
+    All master cells lie to the left of or on the center column k=0.
 """
 
 # Python standard library
