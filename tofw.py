@@ -21,7 +21,6 @@ Some terminology/notation:
         equal parities (we consider these cells trivial)
     zero sea - the infinite grid of cells stretching rightward where k>n-3; all entries
         here are 0 (we consider these cells trivial)
-
 """
 
 import pandas as pd
@@ -83,7 +82,7 @@ def B(k, n):
 
 def get_k_index(n, nonpos_k=False, nontrivial=False):
     """
-    Returns the k-indexes of the cells in row n within 3-n <= k <= n-3; less than this is the
+    Returns the k-coordinates of the cells in row n within 3-n <= k <= n-3; less than this is the
     trivial 4^n sea, greater than this is the trivial zero sea
 
         nonpos_k=True gets only k<=0 (where the master cell is conjectured to always be)
