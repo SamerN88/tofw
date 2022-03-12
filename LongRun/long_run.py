@@ -64,6 +64,9 @@ STDOUT_FP = 'logs/stdout.txt'
 # Define cado-nfs file path (relative path; must be updated if location of cado-nfs/ changes)
 CADO_NFS_FP = '../../cado-nfs/cado-nfs.py'
 
+# Define the name of the git branch receiving the logged data in real-time
+RUNNING_BRANCH = 'running'
+
 
 # FACTORING ============================================================================================================
 
@@ -164,7 +167,7 @@ def get_next_run_no():
     return prev_run + 1
 
 
-def update_git(commit_msg, branch='running'):
+def update_git(commit_msg, branch):
     # Only update git if data is being logged
     if LOG_DATA:
         subprocess.call(['git', 'add', '.'])
@@ -272,7 +275,7 @@ def prime_growth_data_logger(max_depth=None):
             # ----------------------------------------------------------------------------------------------------------
 
             # Auto update git repo
-            update_git(f'[AUTO] run {run_no}, n={n}')
+            update_git(f'[AUTO] run {run_no}, n={n}', RUNNING_BRANCH)
 
             if not LOG_DATA:
                 print('(NOT LOGGED)')
@@ -312,7 +315,7 @@ def prime_growth_data_logger(max_depth=None):
         # --------------------------------------------------------------------------------------------------------------
 
         # Auto update git repo
-        update_git(f'[AUTO] finish run {run_no} (n={last_n})')
+        update_git(f'[AUTO] finish run {run_no} (n={last_n})', RUNNING_BRANCH)
 
         print(stop_reason)
         print(f'\n\nEnd run at {end}')
