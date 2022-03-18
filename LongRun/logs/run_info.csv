@@ -19,3 +19,4 @@ run,start,end,last_n,stop_reason,mp_threshold,cpu_info
 18,"2022-03-05 04:28:25.859527 UTC","2022-03-07 02:10:19.015781 UTC",147,"PROCESS STOPPED BY USER",N/A,"{'cores': 6, 'current_freq': 3.699416666666666, 'max_freq': 3700.0, 'min_freq': 800.0, 'os': 'Linux'}"
 19,"2022-03-07 02:30:15.009559 UTC","2022-03-07 19:45:53.660074 UTC",151,"PROCESS STOPPED BY USER",N/A,"{'cores': 6, 'current_freq': 3.699333333333333, 'max_freq': 3700.0, 'min_freq': 800.0, 'os': 'Linux'}"
 20,None,None,156,"POWER CUT",N/A,None
+21,None,None,159,"UNKNOWN",N/A,None

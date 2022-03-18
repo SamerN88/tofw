@@ -1,9 +1,36 @@
 """
-Free Weight Cellular Automaton - Computational Exploration
+LongRun
 Samer Najjar
-21 May 2021
+30 January 2022
 
-TOFW = Table of Free Weights
+This exploration aims to measure the growth of the master prime p_n against 4^n in the long run. To
+do so, for each row, we find p_n by factoring all non-trivial entries in row n and finding the
+largest prime among all the factors. Then, we compute the "growth average" described below, which is
+our metric for measuring the growth of p_n against 4^n. The goal is to observe the behavior of this
+metric in the long run, in hopes that it approaches 1 (see below).
+
+The growth average metric (growth_avg) is the quantity
+
+    (1 / log(4)X) sum_{n=1}^X log(p_n)/n
+
+where p_n is the largest prime factor in row n and X is the number of rows over which we average
+the quantity log(p_n)/log(4)n which is a measure of how close the growth of p_n is to 4^n; the
+closer this quantity is to 1, the closer the growth of p_n is to that of 4^n. If the growth
+average approaches 1 in the long run, this indicates that p_n grows like 4^n, i.e. it grows as
+fast as possible given that it is less than 4^n.
+
+Master cells data that is logged:
+    n: row index (of master cell)
+    k: column index (of master cell)
+    p_n: largest prime factor in row n
+    growth_avg: the metric by which we measure the growth of p_n against 4^n
+    entry: the output of B(k, n), i.e. the entry at cell (k, n) of which p_n is a factor
+    factors: prime factorization of the entry (as a dictionary)
+    runtime: the time it took to compute everything for row n in seconds
+
+This exploration assumes the following conjecture:
+    All master cells satisfy k<=0 (i.e. all master cells lie to the
+    left of or on the center column k=0).
 """
 
 # Python standard library
@@ -18,6 +45,9 @@ import multiprocessing
 import pandas as pd
 from sympy.ntheory import factorint
 import psutil
+
+# In project
+from tofw import get_k_index, get_row
 
 # Configure pandas to use high-precision floats
 pd.set_option('display.precision', 16)
@@ -34,47 +64,8 @@ STDOUT_FP = 'logs/stdout.txt'
 # Define cado-nfs file path (relative path; must be updated if location of cado-nfs/ changes)
 CADO_NFS_FP = '../../cado-nfs/cado-nfs.py'
 
-
-# TOFW OPERATIONS ======================================================================================================
-
-# Returns the value at coordinate k on row n=1 (defined in Burton's paper)
-def b(k: int) -> int:
-    if (k % 2 == 0) and (k <= 0):
-        return 4
-    else:
-        return 0
-
-
-# Gets the value of a cell in the Table of Free Weights, iteratively
-def B(k, n):
-    if n < 1:
-        msg = 'tape index (n) must be a natural number from [1, inf)'
-        raise ValueError(msg)
-
-    # if k and n have the same parity, or k >= n, the value in the cell is always 0
-    if ((k % 2) == (n % 2)) or (k >= n):
-        return 0
-
-    # cells on and to the left of the diagonal (-n+1, n) are predictable powers of 2
-    if k <= -n + 1:
-        return 2 ** (2 * n)
-
-    row = [b(j) for j in range(k - n + 1, (k + n - 1) + 1)]
-    for _ in range(2, n + 1):
-        end_idx = len(row) - 2
-        row = [row[j - 1] + 3*row[j + 1] for j in range(1, end_idx + 1)]
-
-    return row[0]
-
-
-# Returns the k-indexes of non-trivial cells in row n (nonpos_k=True gets only k<=0)
-def get_k_index(n, nonpos_k=True):
-    return range(3-n, (0 if nonpos_k else n-3) + 1, 2)
-
-
-# Returns the non-trivial entries in row n (nonpos_k=True gets only k<=0)
-def get_row(n, nonpos_k=True):
-    return [B(k, n) for k in get_k_index(n, nonpos_k)]
+# Define the name of the git branch receiving the logged data in real-time
+RUNNING_BRANCH = 'running'
 
 
 # FACTORING ============================================================================================================
@@ -176,12 +167,12 @@ def get_next_run_no():
     return prev_run + 1
 
 
-def update_git(commit_msg, branch='running'):
+def update_git(commit_msg, branch):
     # Only update git if data is being logged
     if LOG_DATA:
         subprocess.call(['git', 'add', '.'])
         subprocess.call(['git', 'commit', '-m', commit_msg])
-        subprocess.call(['git', 'push', '-u', 'origin', branch])  # never auto push to main
+        subprocess.call(['git', 'push', 'origin', branch])  # never auto push to main
 
 
 # This function is strictly designed to communicate with outside text files in a specific way;
@@ -189,25 +180,6 @@ def update_git(commit_msg, branch='running'):
 # (NOTE: removed multiprocessing implementation because the cado-nfs implementation is already
 # multi-threaded; using multiprocessing on row decomposition would choke the CPU)
 def prime_growth_data_logger(max_depth=None):
-    """
-    The growth average metric (growth_avg) is the quantity
-
-    (1/ log(4)X) sum_{n=1}^X log(p_n)/n
-
-    where p_n is the largest prime factor in row n and X is the number of rows over which we average
-    the quantity log(p_n)/log(4)n which is a measure of how close the growth of p_n is to 4^n (the
-    closer this quantity is to 1, the closer the growth is to 4^n).
-
-    Master cells data that is logged:
-        n: row index (of master cell)
-        k: column index (of master cell)
-        p_n: largest prime factor in row n
-        growth_avg: the metric by which we measure the growth of p_n against 4^n
-        entry: the output of B(k, n), i.e. the value at cell (k, n) of which p_n is a factor
-        factors: prime factorization of the entry (as a dictionary)
-        runtime: the time it took to compute everything for row n in seconds
-    """
-
     # Argument validation
     if (max_depth is not None) and (max_depth < 1):
         msg = 'max_depth argument must be at least 1 (row index starts at 1)'
@@ -247,11 +219,11 @@ def prime_growth_data_logger(max_depth=None):
         while (max_depth is None) or (n <= max_depth):
             t1 = time.time()
 
-            # Get k-coordinates of non-trivial entries
-            k_index = get_k_index(n)
+            # Get k-coordinates of non-trivial cells (only k<=0, by conjecture)
+            k_index = get_k_index(n, nonpos_k=True, nontrivial=True)
 
-            # Generate non-trivial entries in row n (only k<=0)
-            row = get_row(n)
+            # Generate non-trivial entries in row n (only k<=0, by conjecture)
+            row = get_row(n, nonpos_k=True, nontrivial=True)
 
             # Factor entries in row, and show progress
             row_decomp = []
@@ -267,7 +239,7 @@ def prime_growth_data_logger(max_depth=None):
             master_k = None
             master_entry = None
             master_factors = None
-            for k, entry, factors in zip(k_index, row, row_decomp):  # index row_decomp by each cell's k coordinate
+            for k, entry, factors in zip(k_index, row, row_decomp):  # index row_decomp by each cell's k-coordinate
                 max_factor = max(factors)
 
                 # Log --------------------------------------------------------------------------------------------------
@@ -303,7 +275,7 @@ def prime_growth_data_logger(max_depth=None):
             # ----------------------------------------------------------------------------------------------------------
 
             # Auto update git repo
-            update_git(f'[AUTO] run {run_no}, n={n}')
+            update_git(f'[AUTO] run {run_no}, n={n}', RUNNING_BRANCH)
 
             if not LOG_DATA:
                 print('(NOT LOGGED)')
@@ -343,7 +315,7 @@ def prime_growth_data_logger(max_depth=None):
         # --------------------------------------------------------------------------------------------------------------
 
         # Auto update git repo
-        update_git(f'[AUTO] finish run {run_no} (n={last_n})')
+        update_git(f'[AUTO] finish run {run_no} (n={last_n})', RUNNING_BRANCH)
 
         print(stop_reason)
         print(f'\n\nEnd run at {end}')
