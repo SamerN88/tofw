@@ -172,7 +172,7 @@ def update_git(commit_msg, branch):
     if LOG_DATA:
         subprocess.call(['git', 'add', '.'])
         subprocess.call(['git', 'commit', '-m', commit_msg])
-        subprocess.call(['git', 'push', '-u', 'origin', branch])  # never auto push to main
+        subprocess.call(['git', 'push', 'origin', branch])  # never auto push to main
 
 
 # This function is strictly designed to communicate with outside text files in a specific way;
