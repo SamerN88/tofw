@@ -2,7 +2,7 @@ import os
 import multiprocessing
 import subprocess
 from sympy.ntheory import factorint
-from datalogging import log_to_file, read_file
+from utils.datalogging import log_to_file, read_file
 
 # Define cado-nfs file path (relative path; must be updated if location of cado-nfs/ changes)
 CADO_NFS_FP = os.path.join('..', '..', 'cado-nfs', 'cado-nfs.py')
