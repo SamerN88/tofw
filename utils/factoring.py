@@ -2,14 +2,27 @@ import os
 import multiprocessing
 import subprocess
 from sympy.ntheory import factorint
+from datalogging import log_to_file, read_file
 
 # Define cado-nfs file path (relative path; must be updated if location of cado-nfs/ changes)
 CADO_NFS_FP = os.path.join('..', '..', 'cado-nfs', 'cado-nfs.py')
 
 
+# Helper function for timeout_factorint
+def _write_to_tempfile_factorint(n, tempfile_fp):
+    log_to_file(tempfile_fp, str(factorint(n)))
+
+
 def timeout_factorint(n, timeout):
+    # Rationale: due to how the multiprocessing module works, it is difficult to get the return
+    # value from a process so to get around this we write the result to a temporary file
+    tempfile_fp = 'timeout_factorint.tmp'
+
     # Spawn process to factor number, and start it
-    process = multiprocessing.Process(target=factorint, args=(n,))
+    process = multiprocessing.Process(
+        target=_write_to_tempfile_factorint,
+        args=(n, tempfile_fp)
+    )
     process.start()
 
     # Pause execution of main program until process completes or until timeout
@@ -22,9 +35,9 @@ def timeout_factorint(n, timeout):
         return None
     else:
         # Otherwise, return complete factorization
-        # (INEFFICIENCY: can't extract return value from initial subprocess,
-        # so must factor number again, doubling the runtime)
-        return factorint(n)
+        factors = eval(read_file(tempfile_fp))  # retrieve result from temporary file (evaluate as dict)
+        os.remove(tempfile_fp)  # delete temporary file
+        return factors
 
 
 # From cado-nfs project: https://gitlab.inria.fr/cado-nfs/cado-nfs
