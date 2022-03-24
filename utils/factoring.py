@@ -10,7 +10,8 @@ CADO_NFS_FP = os.path.join('..', '..', 'cado-nfs', 'cado-nfs.py')
 
 # Helper function for timeout_factorint
 def _write_to_tempfile_factorint(n, tempfile_fp):
-    log_to_file(tempfile_fp, str(factorint(n)))
+    factors = factorint(n)
+    log_to_file(tempfile_fp, str(factors))
 
 
 def timeout_factorint(n, timeout):
@@ -32,11 +33,15 @@ def timeout_factorint(n, timeout):
     if process.is_alive():
         process.terminate()
         process.join()  # make sure process terminates before moving on
-        return None
+        factors = None
     else:
         # Otherwise, return complete factorization
         factors = eval(read_file(tempfile_fp))  # retrieve result from temporary file (evaluate as dict)
-        os.remove(tempfile_fp)  # delete temporary file
+
+    # Try to delete temporary file after everything is done to ensure it gets deleted no matter what
+    try:
+        os.remove(tempfile_fp)
+    finally:
         return factors
 
 
