@@ -12,10 +12,14 @@ import datetime
 import time
 import multiprocessing
 import os
+import sys
 
 # Requires installation
 import pandas as pd
 from sympy.ntheory import factorint
+
+# Add root directory to path so tofw.py can be imported (this is a non-Pythonic hack, but is the quickest solution)
+sys.path.append('..' + os.sep)
 
 # In project
 from tofw import B, get_k_index, get_row

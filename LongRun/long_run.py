@@ -39,10 +39,14 @@ import datetime
 import time
 import platform
 import os
+import sys
 
 # Requires installation
 import pandas as pd
 import psutil
+
+# Add root directory to path so tofw.py can be imported (this is a non-Pythonic hack, but is the quickest solution)
+sys.path.append('..' + os.sep)
 
 # In project
 from tofw import get_k_index, get_row
