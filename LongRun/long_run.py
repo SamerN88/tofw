@@ -38,147 +38,37 @@ import math
 import datetime
 import time
 import platform
-import subprocess
-import multiprocessing
+import os
 
 # Requires installation
 import pandas as pd
-from sympy.ntheory import factorint
 import psutil
 
 # In project
 from tofw import get_k_index, get_row
-
-# Configure pandas to use high-precision floats
-pd.set_option('display.precision', 16)
+from utils.factoring import corrected_cado_factor
+from utils.datalogging import read_file, get_next_run_no, log_to_file, update_git
 
 # False for testing, True for deployment
 LOG_DATA = True
 
-# Define logs' file paths
-MASTER_CELLS_FP = 'logs/master_cells.csv'
-RUN_INFO_FP = 'logs/run_info.csv'
-ALL_CELLS_FP = 'logs/all_cells.csv'
-STDOUT_FP = 'logs/stdout.txt'
-
-# Define cado-nfs file path (relative path; must be updated if location of cado-nfs/ changes)
-CADO_NFS_FP = '../../cado-nfs/cado-nfs.py'
+# Define file paths of data logs
+MASTER_CELLS_FP = os.path.join('logs', 'master_cells.csv')
+RUN_INFO_FP = os.path.join('logs', 'run_info.csv')
+ALL_CELLS_FP = os.path.join('logs', 'all_cells.csv')
+STDOUT_FP = os.path.join('logs', 'stdout.txt')
 
 # Define the name of the git branch receiving the logged data in real-time
 RUNNING_BRANCH = 'running'
 
-
-# FACTORING ============================================================================================================
-
-def timeout_factorint(n, timeout):
-    # Spawn process to factor number, and start it
-    process = multiprocessing.Process(target=factorint, args=(n,))
-    process.start()
-
-    # Pause execution of main program until process completes or until timeout
-    process.join(timeout)
-
-    # If process is still alive at this point, then it timed out so terminate the process and return None
-    if process.is_alive():
-        process.terminate()
-        process.join()  # make sure process terminates before moving on
-        return None
-    else:
-        # Otherwise, return complete factorization
-        # (INEFFICIENCY: can't extract return value from initial subprocess,
-        # so must factor number again, doubling the runtime)
-        return factorint(n)
-
-
-# From cado-nfs project: https://gitlab.inria.fr/cado-nfs/cado-nfs
-def cado_nfs(n):
-    output = subprocess.check_output(['python3', CADO_NFS_FP, str(n), '--screenlog', 'ERROR'])
-    output = output.decode("utf-8")
-    return sorted([int(i) for i in output.split()])
-
-
-def corrected_cado_factor(n, *, timeout=15, return_method_used=False):
-    # Check if sympy's factorint can factor entry within the timeout length; if not, use cado-nfs
-    factors = timeout_factorint(n, timeout=timeout)
-    if factors is not None:
-        method_used = 'sympy'
-        # DONE, skip to return
-    else:
-        # If sympy's factorint did not factor it fast enough, use cado-nfs (below)
-
-        def product(it):
-            prod = 1
-            for k in it:
-                prod *= k
-            return prod
-
-        try:
-            cado_factors = cado_nfs(n)
-
-            # In case cado-nfs returns an empty list, just use sympy's factorint
-            if len(cado_factors) == 0:
-                factors = factorint(n)
-                method_used = 'sympy'
-                # DONE, skip to return
-            else:
-                # Otherwise, find the remaining small factors with sympy's factorint
-                remaining = n // product(cado_factors)
-                factors = factorint(remaining)
-
-                for f in cado_factors:
-                    try:
-                        factors[f] += 1
-                    except KeyError:
-                        factors[f] = 1
-
-                method_used = 'cado'
-                # DONE, skip to return
-        except:
-            # If for whatever reason cado-nfs fails (e.g. if number is too small), just use sympy's factorint
-            factors = factorint(n)
-            method_used = 'sympy'
-            # DONE, skip to return
-
-    return (factors, method_used) if return_method_used else factors
-
-
-# DATA LOGGING =========================================================================================================
-
-def read_file(fp):
-    with open(fp, 'r') as file:
-        return file.read()
-
-
-def log_to_file(fp, content):
-    # Only logs data if LOG_DATA flag is True
-    if LOG_DATA:
-        with open(fp, 'a') as file:
-            file.write(content)
-
-
-def get_next_run_no():
-    # Get previous run number
-    run_numbers = pd.read_csv(RUN_INFO_FP)['run']
-    if len(run_numbers) == 0:
-        prev_run = 0  # i.e. there are no previous runs
-    else:
-        prev_run = list(run_numbers)[-1]  # better than len(file.readlines()) or Series.max()
-
-    return prev_run + 1
-
-
-def update_git(commit_msg, branch):
-    # Only update git if data is being logged
-    if LOG_DATA:
-        subprocess.call(['git', 'add', '.'])
-        subprocess.call(['git', 'commit', '-m', commit_msg])
-        subprocess.call(['git', 'push', 'origin', branch])  # never auto push to main
+# Configure pandas to use high-precision floats
+pd.set_option('display.precision', 16)
 
 
 # This function is strictly designed to communicate with outside text files in a specific way;
 # it serves a very specific purpose and is not made for general use.
 # (NOTE: removed multiprocessing implementation because the cado-nfs implementation is already
-# multi-threaded; using multiprocessing on row decomposition would choke the CPU)
+# multi-threaded; using multiprocessing on row decomposition would overwhelm the CPU)
 def prime_growth_data_logger(max_depth=None):
     # Argument validation
     if (max_depth is not None) and (max_depth < 1):
@@ -200,12 +90,12 @@ def prime_growth_data_logger(max_depth=None):
     # Read master data log as a DataFrame (to read last n and growth_avg values)
     master_data_df = pd.read_csv(MASTER_CELLS_FP)
 
-    # Set n and growth_avg to most current values
+    # Set n and growth_avg to most current values (ASSUMES THERE IS PREVIOUS DATA)
     n = list(master_data_df['n'])[-1] + 1
     growth_avg = list(master_data_df['growth_avg'])[-1]
 
     # Get current run number
-    run_no = get_next_run_no()
+    run_no = get_next_run_no(RUN_INFO_FP)
 
     # Default stop reason, expected to change later to something meaningful
     stop_reason = 'UNKNOWN'
@@ -243,7 +133,8 @@ def prime_growth_data_logger(max_depth=None):
                 max_factor = max(factors)
 
                 # Log --------------------------------------------------------------------------------------------------
-                log_to_file(ALL_CELLS_FP, f'{n},{k},{entry},"{factors}",{max_factor}\n')
+                if LOG_DATA:
+                    log_to_file(ALL_CELLS_FP, f'{n},{k},{entry},"{factors}",{max_factor}\n')
                 # ------------------------------------------------------------------------------------------------------
 
                 if max_factor > p_n:
@@ -261,21 +152,20 @@ def prime_growth_data_logger(max_depth=None):
 
             runtime = time.time() - t1  # in seconds
 
-            # Log ------------------------------------------------------------------------------------------------------
-            log_to_file(MASTER_CELLS_FP, f'{n},{master_k},{p_n},{growth_avg},{master_entry},"{master_factors}",{runtime}\n')
-            # ----------------------------------------------------------------------------------------------------------
-
             stdout = f'n={n}, k={master_k}\n'
             stdout += f'p_n = {p_n}\n'
             stdout += f'growth avg = {growth_avg}\n'
             stdout += f'({runtime} sec)\n'
 
             # Log ------------------------------------------------------------------------------------------------------
-            log_to_file(STDOUT_FP, stdout + '\n')
-            # ----------------------------------------------------------------------------------------------------------
+            if LOG_DATA:
+                log_to_file(MASTER_CELLS_FP,
+                            f'{n},{master_k},{p_n},{growth_avg},{master_entry},"{master_factors}",{runtime}\n')
+                log_to_file(STDOUT_FP, stdout + '\n')
 
-            # Auto update git repo
-            update_git(f'[AUTO] run {run_no}, n={n}', RUNNING_BRANCH)
+                # Auto update git repo
+                update_git(f'[AUTO] run {run_no}, n={n}', RUNNING_BRANCH)
+            # ----------------------------------------------------------------------------------------------------------
 
             if not LOG_DATA:
                 print('(NOT LOGGED)')
@@ -310,12 +200,13 @@ def prime_growth_data_logger(max_depth=None):
             cpu_info = f'{type(e).__name__}: {e}'
 
         # Log ----------------------------------------------------------------------------------------------------------
-        stop_reason = stop_reason.replace('"', "'")  # to avoid parsing errors in CSV file
-        log_to_file(RUN_INFO_FP, f'{run_no},"{start}","{end}",{last_n},"{stop_reason}",N/A,"{cpu_info}"\n')
-        # --------------------------------------------------------------------------------------------------------------
+        if LOG_DATA:
+            stop_reason = stop_reason.replace('"', "'")  # to avoid parsing errors in CSV file
+            log_to_file(RUN_INFO_FP, f'{run_no},"{start}","{end}",{last_n},"{stop_reason}",N/A,"{cpu_info}"\n')
 
-        # Auto update git repo
-        update_git(f'[AUTO] finish run {run_no} (n={last_n})', RUNNING_BRANCH)
+            # Auto update git repo
+            update_git(f'[AUTO] finish run {run_no} (n={last_n})', RUNNING_BRANCH)
+        # --------------------------------------------------------------------------------------------------------------
 
         print(stop_reason)
         print(f'\n\nEnd run at {end}')
@@ -327,13 +218,14 @@ def main():
         confirm = input('LOG_DATA is True; are you sure you want to update git? [y/n]: ')
         if confirm == '' or confirm.strip()[0].lower() != 'y':
             exit()
+
         print('*'*77 + '\n')
 
-        # Check if logs are in sync before continuing
+        # Check if logs are in sync before continuing (ASSUMES THERE IS PREVIOUS DATA)
         last_n = list(pd.read_csv(RUN_INFO_FP)['last_n'])[-1]
         max_n = list(pd.read_csv(MASTER_CELLS_FP)['n'])[-1]
         if last_n != max_n:
-            print(f'DATA LOGS OUT OF SYNC: check "n" in {MASTER_CELLS_FP} and "last_n" in {RUN_INFO_FP}')
+            print(f'DATA LOGS OUT OF SYNC; check "n" in {MASTER_CELLS_FP} and "last_n" in {RUN_INFO_FP}')
             exit()
 
     prime_growth_data_logger()
@@ -341,12 +233,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-#   TODO: start new exploration called MasterSift that gets only master cells in the following way:
-#       - since master cells factor very quickly (under 1 sec up to n=126), we will assume that master cells up to
-#         n=N factor in under X_N seconds; we then go through a row, and if a cell takes longer than X_N sec to
-#         factor, we skip it. we only factor easy cells, then find the master cell among those.
-#         * CON: this assumes that master cells will always factor in under X seconds given n=N
-#         * PRO: if our assumption holds, then this is a super expedient way to get master cells
-#
