@@ -41,8 +41,10 @@ def timeout_factorint(n, timeout):
     # Try to delete temporary file after everything is done to ensure it gets deleted no matter what
     try:
         os.remove(tempfile_fp)
-    finally:
-        return factors
+    except FileNotFoundError:
+        pass
+
+    return factors
 
 
 # From cado-nfs project: https://gitlab.inria.fr/cado-nfs/cado-nfs
