@@ -90,7 +90,7 @@ def prime_growth_data_logger(max_depth=None):
     # Read master data log as a DataFrame (to read last n and growth_avg values)
     master_data_df = pd.read_csv(MASTER_CELLS_FP)
 
-    # Set n and growth_avg to most current values
+    # Set n and growth_avg to most current values (ASSUMES THERE IS PREVIOUS DATA)
     n = list(master_data_df['n'])[-1] + 1
     growth_avg = list(master_data_df['growth_avg'])[-1]
 
@@ -221,7 +221,7 @@ def main():
 
         print('*'*77 + '\n')
 
-        # Check if logs are in sync before continuing
+        # Check if logs are in sync before continuing (ASSUMES THERE IS PREVIOUS DATA)
         last_n = list(pd.read_csv(RUN_INFO_FP)['last_n'])[-1]
         max_n = list(pd.read_csv(MASTER_CELLS_FP)['n'])[-1]
         if last_n != max_n:
