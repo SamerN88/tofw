@@ -7,37 +7,29 @@ MasterSift picks up from n=160 (LongRun stopped at n=159).
 """
 
 # Python standard library
-import math
 import datetime
 import time
 import multiprocessing
-import os
 import sys
+import os
 
 # Requires installation
 import pandas as pd
 from sympy.ntheory import factorint
 
-# Add root directory to path so tofw.py can be imported (this is a non-Pythonic hack, but is the quickest solution)
+# Add root directory to path so top-level modules can be imported
+# (this is a non-Pythonic hack, but is the quickest solution)
 sys.path.append('..' + os.sep)
 
 # In project
-from tofw import B, get_k_index, get_row
+from config import LOG_DATA, RUNNING_BRANCH
+from tofw import B, get_k_index, get_row, intermediate_growth_ratio
 from utils.factoring import timeout_factorint
 from utils.datalogging import get_next_run_no, log_to_file, update_git
-
-# False for testing, True for deployment
-LOG_DATA = False
 
 # Define file paths of data logs
 MASTER_CELLS_SIFTED_FP = os.path.join('logs', 'master_cells_sifted.csv')
 RUN_INFO_SIFTED_FP = os.path.join('logs', 'run_info_sifted.csv')
-
-# Define the name of the git branch receiving the logged data in real-time
-RUNNING_BRANCH = 'running'
-
-# Configure pandas to use high-precision floats
-pd.set_option('display.precision', 16)
 
 
 def get_benchmark_timeout_rule():
@@ -149,7 +141,7 @@ def master_sifter(max_depth=None):
             growth_avg = (
                                  (n - 1) * growth_avg
                                  +
-                                 (math.log(p_n) / (math.log(4) * n))
+                                 intermediate_growth_ratio(n, p_n)
                          ) / n
 
             runtime = time.time() - t1  # in seconds

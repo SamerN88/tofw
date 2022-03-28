@@ -34,39 +34,31 @@ This exploration assumes the following conjecture:
 """
 
 # Python standard library
-import math
 import datetime
 import time
 import platform
-import os
 import sys
+import os
 
 # Requires installation
 import pandas as pd
 import psutil
 
-# Add root directory to path so tofw.py can be imported (this is a non-Pythonic hack, but is the quickest solution)
+# Add root directory to path so top-level modules can be imported
+# (this is a non-Pythonic hack, but is the quickest solution)
 sys.path.append('..' + os.sep)
 
 # In project
-from tofw import get_k_index, get_row
+from config import LOG_DATA, RUNNING_BRANCH
+from tofw import get_k_index, get_row, intermediate_growth_ratio
 from utils.factoring import corrected_cado_factor
 from utils.datalogging import read_file, get_next_run_no, log_to_file, update_git
-
-# False for testing, True for deployment
-LOG_DATA = False
 
 # Define file paths of data logs
 MASTER_CELLS_FP = os.path.join('logs', 'master_cells.csv')
 RUN_INFO_FP = os.path.join('logs', 'run_info.csv')
 ALL_CELLS_FP = os.path.join('logs', 'all_cells.csv')
 STDOUT_FP = os.path.join('logs', 'stdout.txt')
-
-# Define the name of the git branch receiving the logged data in real-time
-RUNNING_BRANCH = 'running'
-
-# Configure pandas to use high-precision floats
-pd.set_option('display.precision', 16)
 
 
 # This function is strictly designed to communicate with outside text files in a specific way;
@@ -151,7 +143,7 @@ def prime_growth_data_logger(max_depth=None):
             growth_avg = (
                             (n - 1) * growth_avg
                             +
-                            (math.log(p_n) / (math.log(4)*n))
+                            intermediate_growth_ratio(n, p_n)
                         ) / n
 
             runtime = time.time() - t1  # in seconds
