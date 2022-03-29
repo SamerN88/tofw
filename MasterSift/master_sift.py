@@ -34,26 +34,18 @@ RUN_INFO_SIFTED_FP = os.path.join('logs', 'run_info_sifted.csv')
 
 def get_benchmark_timeout(bm_entry=B(-951, 1000)):
     # This function times how long it takes to factor the entry bm_entry (default value B(-951, 1000)
-    # is arbitrarily chosen) and returns the average of 10 runs. This time length is expected to be
-    # used as a benchmark to determine what timeout length to use when sifting a given row. The entry
-    # bm_entry should be a master entry; problems may arise if it isn't.
+    # is arbitrarily chosen) using the timeout_factorint implementation, and returns the average of 10
+    # runs. This time length is expected to be used as a benchmark to determine what timeout length to
+    # use when sifting a given row. The entry bm_entry should be a master entry; problems may arise if
+    # it isn't.
 
     # Get average runtime of 10 benchmark runs
-    sum_runtimes = 0
+    t1 = time.time()
     for _ in range(10):
-        # Spawn process to factor entry, and start it
-        process = multiprocessing.Process(target=factorint, args=(bm_entry,))
-        process.start()
+        timeout_factorint(bm_entry, 2**19 - 1)  # absurdly long timeout to ensure bm_entry is factored
+    runtime = time.time() - t1
 
-        # Pause execution of main program until process completes; get runtime
-        t1 = time.time()
-        process.join()
-        t2 = time.time()
-
-        runtime = t2 - t1
-        sum_runtimes += runtime
-
-    bm_runtime = sum_runtimes / 10
+    bm_runtime = runtime / 10
     return bm_runtime
 
 
@@ -128,7 +120,7 @@ def master_sifter(max_depth=None):
             t1 = time.time()
 
             # Based on benchmark timeout get appropriate timeout for this n, then sift through row n for master data
-            timeout = bm_timeout * 2.5  # arbitrary
+            timeout = bm_timeout * 2  # arbitrary multiplier; just give enough time
             master_cell = sift_row(n, timeout)
 
             n = master_cell['n']
