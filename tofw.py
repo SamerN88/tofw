@@ -23,6 +23,7 @@ Some terminology/notation:
         here are 0 (we consider these cells trivial)
 """
 
+from math import log as ln
 import pandas as pd
 from sympy.ntheory import factorint
 
@@ -112,6 +113,20 @@ def get_row_in_range(n, k_start, k_end):
     Returns all entries (including trivial) in row n within start_k <= k <= end_k
     """
     return [B(k, n) for k in range(k_start, k_end + 1)]
+
+
+def intermediate_growth_ratio(n, p_n):
+    """
+    Computes the quantity
+
+        ln(p_n) / (n * ln(4))
+
+    which is the ratio that we average over many rows when measuring the growth of p_n
+    against 4^n. Thus, it is an intermediate value that gets computed as part of an
+    average that measures growth of p_n, so we call this quantity the intermediate
+    growth ratio for row n.
+    """
+    return ln(p_n) / (n * ln(4))
 
 
 def tofw_grid(k_range, n_range, factor_entries=False):
