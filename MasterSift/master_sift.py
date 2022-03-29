@@ -12,14 +12,14 @@ import time
 import sys
 import os
 
-# Requires installation
+# Third-party
 import pandas as pd
 
 # Add root directory to path so top-level modules can be imported
 # (this is a non-Pythonic hack, but is the quickest solution)
 sys.path.append('..' + os.sep)
 
-# In project
+# In-project
 from config import LOG_DATA, RUNNING_BRANCH
 from tofw import B, get_k_index, get_row, intermediate_growth_ratio
 from utils.factoring import timeout_factorint

@@ -40,7 +40,7 @@ import platform
 import sys
 import os
 
-# Requires installation
+# Third-party
 import pandas as pd
 import psutil
 
@@ -48,7 +48,7 @@ import psutil
 # (this is a non-Pythonic hack, but is the quickest solution)
 sys.path.append('..' + os.sep)
 
-# In project
+# In-project
 from config import LOG_DATA, RUNNING_BRANCH
 from tofw import get_k_index, get_row, intermediate_growth_ratio
 from utils.factoring import corrected_cado_factor
