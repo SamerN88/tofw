@@ -32,21 +32,17 @@ MASTER_CELLS_SIFTED_FP = os.path.join('logs', 'master_cells_sifted.csv')
 RUN_INFO_SIFTED_FP = os.path.join('logs', 'run_info_sifted.csv')
 
 
-def get_benchmark_timeout_rule():
-    # Returns a function that determines reasonable timeout for a given n, based on machine's speed.
+def get_benchmark_timeout(bm_entry=B(-951, 1000)):
+    # This function times how long it takes to factor the entry bm_entry (default value B(-951, 1000)
+    # is arbitrarily chosen) and returns the average of 10 runs. This time length is expected to be
+    # used as a benchmark to determine what timeout length to use when sifting a given row. The entry
+    # bm_entry should be a master entry; problems may arise if it isn't.
 
-    # This function times how long it takes to factor the master entry in row 1000 (arbitrarily chosen),
-    # located at B(-951, 1000). This time length will be used as a benchmark to determine how the timeout
-    # should increase as n increases. A rule is then defined such that every 1000 rows, the timeout increases
-    # by the benchmark time.
-
-    master_entry_1000 = B(-951, 1000)
-
-    # Get max runtime among 10 benchmark runs
-    bm_runtime = 0
+    # Get average runtime of 10 benchmark runs
+    sum_runtimes = 0
     for _ in range(10):
         # Spawn process to factor entry, and start it
-        process = multiprocessing.Process(target=factorint, args=(master_entry_1000,))
+        process = multiprocessing.Process(target=factorint, args=(bm_entry,))
         process.start()
 
         # Pause execution of main program until process completes; get runtime
@@ -55,13 +51,10 @@ def get_benchmark_timeout_rule():
         t2 = time.time()
 
         runtime = t2 - t1
-        if runtime > bm_runtime:
-            bm_runtime = runtime
+        sum_runtimes += runtime
 
-    # Timeout rule:
-    #   - timeout for n=1-1000 is triple the benchmark runtime
-    #   - every 1000 rows after that, timeout increases by the benchmark runtime
-    return lambda n: (n//1001) * bm_runtime + (3 * bm_runtime)
+    bm_runtime = sum_runtimes / 10
+    return bm_runtime
 
 
 def sift_row(n, timeout):
@@ -119,16 +112,23 @@ def master_sifter(max_depth=None):
     print(f'max_depth = {max_depth}')
     print()
 
-    print('Getting timeout rule...')
-    timeout_rule = get_benchmark_timeout_rule()
+    # Get last master entry and determine benchmark timeout
+    print('Getting benchmark timeout...')
+    last_master_entry = int(list(master_sift_df['entry'])[-1])
+    bm_timeout = get_benchmark_timeout(last_master_entry)
+    print(f'  benchmark timeout = {bm_timeout} sec')
     print(f'Begin sifting master cells at n={n}:\n')
 
     try:
         while (max_depth is None) or (n <= max_depth):
+            # Every 1000 rows, update benchmark timeout
+            if n % 1000 == 1:
+                bm_timeout = get_benchmark_timeout(last_master_entry)
+
             t1 = time.time()
 
-            # Get appropriate timeout based on timeout rule for this n, then sift through row n for master data
-            timeout = timeout_rule(n)
+            # Based on benchmark timeout get appropriate timeout for this n, then sift through row n for master data
+            timeout = bm_timeout * 2.5  # arbitrary
             master_cell = sift_row(n, timeout)
 
             n = master_cell['n']
@@ -136,6 +136,9 @@ def master_sifter(max_depth=None):
             p_n = master_cell['p_n']
             entry = master_cell['entry']
             factors = master_cell['factors']
+
+            # Save last master entry to update benchmark timeout next iteration, if needed
+            last_master_entry = entry
 
             # Compute new growth average
             growth_avg = (
@@ -178,7 +181,7 @@ def master_sifter(max_depth=None):
         # Log ----------------------------------------------------------------------------------------------------------
         if LOG_DATA:
             log_to_file(RUN_INFO_SIFTED_FP,
-                        f'{run_no},"{start}","{end}",{last_n},{end_time - start_time},{timeout_rule(1000)}\n')
+                        f'{run_no},"{start}","{end}",{last_n},{end_time - start_time},{bm_timeout}\n')
 
             # Auto update git repo
             update_git(f'[AUTO] finish run {run_no} (n={last_n}) (sifted)', RUNNING_BRANCH)
