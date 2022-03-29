@@ -9,13 +9,11 @@ MasterSift picks up from n=160 (LongRun stopped at n=159).
 # Python standard library
 import datetime
 import time
-import multiprocessing
 import sys
 import os
 
 # Requires installation
 import pandas as pd
-from sympy.ntheory import factorint
 
 # Add root directory to path so top-level modules can be imported
 # (this is a non-Pythonic hack, but is the quickest solution)
