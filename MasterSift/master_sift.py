@@ -181,7 +181,7 @@ def master_sifter(max_depth=None):
         # Log ----------------------------------------------------------------------------------------------------------
         if LOG_DATA:
             log_to_file(RUN_INFO_SIFTED_FP,
-                        f'{run_no},"{start}","{end}",{last_n},{end_time - start_time},{bm_timeout}\n')
+                        f'{run_no},"{start}","{end}",{last_n},{end_time - start_time}\n')
 
             # Auto update git repo
             update_git(f'[AUTO] finish run {run_no} (n={last_n}) (sifted)', RUNNING_BRANCH)
