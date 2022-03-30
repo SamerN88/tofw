@@ -10,6 +10,11 @@ CADO_NFS_FP = os.path.join('..', '..', 'cado-nfs', 'cado-nfs.py')
 
 # Helper function for timeout_factorint
 def _write_to_tempfile_factorint(n, tempfile_fp):
+    # Ensure tempfile doesn't already exist
+    try:
+        os.remove(tempfile_fp)
+    except FileNotFoundError:
+        pass
     factors = factorint(n)
     log_to_file(tempfile_fp, str(factors))
 
