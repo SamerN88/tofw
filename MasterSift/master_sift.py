@@ -106,15 +106,11 @@ def master_sifter(max_depth=None):
     print('Getting benchmark timeout...')
     last_master_entry = int(list(master_sift_df['entry'])[-1])
     bm_timeout = get_benchmark_timeout(last_master_entry)
-    print(f'  benchmark timeout = {bm_timeout} sec')
+    print(f'  benchmark timeout: {bm_timeout} sec')
     print(f'Begin sifting master cells at n={n}:\n')
 
     try:
         while (max_depth is None) or (n <= max_depth):
-            # Every 1000 rows, update benchmark timeout
-            if n % 1000 == 1:
-                bm_timeout = get_benchmark_timeout(last_master_entry)
-
             t1 = time.time()
 
             # Based on benchmark timeout get appropriate timeout for this n, then sift through row n for master data
@@ -152,11 +148,16 @@ def master_sifter(max_depth=None):
                 print('(NOT LOGGED)')
             print(f'n={n}, k={k}')
             print(f'p_n = {p_n}')
-            print(f'growth avg = {growth_avg}')
+            print(f'growth avg: {growth_avg}')
             print(f'({runtime} sec)')
             print()
 
             n += 1
+
+            # Every 1000 rows, update benchmark timeout
+            if n % 1000 == 1:
+                bm_timeout = get_benchmark_timeout(last_master_entry)
+                print(f'New benchmark timeout: {bm_timeout} sec\n')
         # while-loop ends here
     except KeyboardInterrupt:
         print('PROCESS STOPPED BY USER\n')
