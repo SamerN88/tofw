@@ -40,6 +40,9 @@ def free_weight_cellular_automaton(a, k: int) -> int:
     return a(k - 1) + (3 * a(k + 1))
 
 
+# NOTE: we can get the same results in terms of generating primes by using an initial tape of 1s and 0s
+#   instead of 4s and 0s; the only difference is that the 4^n sea would become a 4^(n-1) sea, but
+#   essentially we'd still be measuring the growth of primes against 4^n in the long run.
 def b(k: int) -> int:
     """
     Burton's initial biinfinite tape of integers, i.e. row n=1 (defined in Burton's paper)
@@ -60,7 +63,7 @@ def B(k, n):
     """
 
     if n < 1:
-        msg = 'row index (n) must be a natural number from [1, inf)'
+        msg = 'row index (n) must be a natural number in [1, inf)'
         raise ValueError(msg)
 
     # If k and n have the same parity, or k >= n, the entry is always 0
@@ -72,7 +75,7 @@ def B(k, n):
         return 4**n
 
     row = [b(j) for j in range(k-n+1, (k+n-1) + 1)]  # get the top-level (n=1) entries needed to compute B(k, n)
-    for _ in range(2, n + 1):
+    for _ in range(n-1):
         end_idx = len(row) - 2
         row = [row[i-1] + 3*row[i+1] for i in range(1, end_idx + 1)]
         # This employs Burton's free weight cellular automaton; although we have a function for this defined above,
