@@ -123,9 +123,6 @@ def master_sifter(max_depth=None):
             entry = master_cell['entry']
             factors = master_cell['factors']
 
-            # Save last master entry to update benchmark timeout next iteration, if needed
-            last_master_entry = entry
-
             # Compute new growth average
             growth_avg = (
                                  (n - 1) * growth_avg
@@ -146,6 +143,8 @@ def master_sifter(max_depth=None):
 
             if not LOG_DATA:
                 print('(NOT LOGGED)')
+            else:
+                print()
             print(f'n={n}, k={k}')
             print(f'p_n = {p_n}')
             print(f'growth avg: {growth_avg}')
@@ -156,7 +155,8 @@ def master_sifter(max_depth=None):
 
             # Every 1000 rows, update benchmark timeout
             if n % 1000 == 1:
-                bm_timeout = get_benchmark_timeout(last_master_entry)
+                print('Getting new benchmark timeout...')
+                bm_timeout = get_benchmark_timeout(entry)
                 print(f'New benchmark timeout: {bm_timeout} sec\n')
         # while-loop ends here
     except KeyboardInterrupt:
