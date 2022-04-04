@@ -36,6 +36,7 @@ def free_weight_cellular_automaton(a, k: int) -> int:
     Burton's free weight cellular automaton (defined in Burton's paper)
         parameter `a` is a function representing a biinfinite tape of integers
         parameter `k` is an integer index on that tape
+        returns a(k-1) + 3a(k+1)
     """
     return a(k - 1) + (3 * a(k + 1))
 
