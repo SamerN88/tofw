@@ -188,7 +188,7 @@ def main():
         if confirm == '' or confirm.strip()[0].lower() != 'y':
             exit()
 
-        print('*' * 77 + '\n')
+        print('*'*77 + '\n')
 
         # Check if logs are in sync before continuing (ASSUMES THERE IS PREVIOUS DATA)
         last_n = list(pd.read_csv(RUN_INFO_SIFTED_FP)['last_n'])[-1]
