@@ -23,6 +23,7 @@ Some terminology/notation:
         here are 0 (we consider these cells trivial)
 """
 
+import math
 from math import log as ln
 import pandas as pd
 from sympy.ntheory import factorint
@@ -36,6 +37,7 @@ def free_weight_cellular_automaton(a, k: int) -> int:
     Burton's free weight cellular automaton (defined in Burton's paper)
         parameter `a` is a function representing a biinfinite tape of integers
         parameter `k` is an integer index on that tape
+        returns a(k-1) + 3a(k+1)
     """
     return a(k - 1) + (3 * a(k + 1))
 
@@ -59,7 +61,11 @@ def b(k: int) -> int:
 
 def B(k, n):
     """
-    Gets the entry at coordinates (k, n) in the Table of Free Weights (defined in Burton's paper), iteratively
+    Gets the entry at coordinates (k, n) in the Table of Free Weights (defined in Burton's paper);
+    a mathematical formula expressed using standard operations, but still not closed-form.
+
+    Formula:
+    B(k, n) = 4 * sum_{i=0}^{n//2 - k//2} binomial(n-1, i) * 3^i
     """
 
     if n < 1:
@@ -67,21 +73,20 @@ def B(k, n):
         raise ValueError(msg)
 
     # If k and n have the same parity, or k >= n, the entry is always 0
-    if ((k % 2) == (n % 2)) or (k >= n):
+    if ((k % 2) == (n % 2)) or k >= n:
         return 0
 
     # Entries on and to the left of the diagonal (-n+1, n) are predictable powers of 4
     if k <= -n+1:
-        return 4**n
+        return 4 ** n
 
-    row = [b(j) for j in range(k-n+1, (k+n-1) + 1)]  # get the top-level (n=1) entries needed to compute B(k, n)
-    for _ in range(n-1):
-        end_idx = len(row) - 2
-        row = [row[i-1] + 3*row[i+1] for i in range(1, end_idx + 1)]
-        # This employs Burton's free weight cellular automaton; although we have a function for this defined above,
-        # it is quicker to directly index the row than to make a function call each time.
+    m = n - 1
 
-    return row[0]
+    num_coefs = (m//2 - k//2) + 1
+    binomial_coefs = (math.comb(m, i) for i in range(num_coefs))
+
+    # 4 * sum_{i=0}^{n//2 - k//2} binomial(n-1, i) * 3^i
+    return 4 * sum(coef * 3**e for e, coef in enumerate(binomial_coefs))
 
 
 def get_k_index(n, nonpos_k=False, nontrivial=False):
