@@ -160,6 +160,50 @@ def tofw_grid(k_range, n_range, factor_entries=False):
     return pd.DataFrame(rows, list(range(n_start, n_end + 1)), list(range(k_start, k_end + 1)))
 
 
+def Burton_triangle(n, verbose=False):
+    """
+    This function essentially builds a triangle of non-trivial entries up to and including
+    row n (resembles Pascal's triangle). The left diagonal of the triangle is comprised of
+    powers of 4 (4^i for i from 1 to n) and the right diagonal of the triangle is comprised
+    of the number 4 repeated. The numbers inside the triangle are the non-trivial entries
+    up to and including row n.
+
+    Returns a list of n tuples, representing the first n rows of the table of free weights;
+    each tuple is built as follows (let i be the row index from 1 to n):
+        - first element is 4^i
+        - inside elements are the non-trivial entries of row i
+        - last element is 4
+    Each row of the triangle is essentially equivalent to
+    [4**i] + get_row(i, nontrivial=True) + [4]
+
+    `verbose=True` prints the triangle neatly
+    """
+
+    if n < 1:
+        msg = 'row index (n) must be a natural number in [1, inf)'
+        raise ValueError(msg)
+
+    initial = [[4], [16, 4]]
+    if n < 3:
+        triangle = initial[:n]
+    else:
+        triangle = initial + [[4**i] + get_row(i, nontrivial=True) + [4] for i in range(3, n+1)]
+
+    if verbose:
+        width = len(str(max(triangle[-1]))) + 1
+        width += (width % 2)
+
+        half_width = width // 2
+
+        num_pads = len(triangle[-1]) - 1
+        for row in triangle:
+            padding = num_pads * half_width * ' '
+            print(padding + ''.join(str(e).center(width) for e in row))
+            num_pads -= 1
+
+    return [tuple(row) for row in triangle]
+
+
 def main():
     # Get grid range and factor_entries option
     n_start, n_end = [int(n) for n in input('Enter n range: ').split()]
