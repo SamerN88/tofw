@@ -3,7 +3,7 @@ The Table of Free Weights: A Computational Exploration
 Samer Najjar
 21 May 2021
 
-TOFW = Table of Free Weights
+TOFW = table of free weights
 
 See Dr. Peter Burton's informal paper "The mystery of the table of free weights" for
 background info and definitions on the TOFW:
@@ -61,7 +61,7 @@ def b(k: int) -> int:
 
 def B(k, n):
     """
-    Gets the entry at coordinates (k, n) in the Table of Free Weights (defined in Burton's paper);
+    Gets the entry at coordinates (k, n) in the table of free weights (defined in Burton's paper);
     a mathematical formula expressed using standard operations, but still not closed-form.
 
     Formula:
@@ -139,7 +139,7 @@ def intermediate_growth_ratio(n, p_n):
 
 def tofw_grid(k_range, n_range, factor_entries=False):
     """
-    Returns a pandas DataFrame of the Table of Free Weights within a specified grid area
+    Returns a pandas DataFrame of the table of free weights within a specified grid area
         k_range is a tuple (k_start, k_end)
         n_range is a tuple (n_start, n_end)
         factor_entries=True factors all the entries in the table
