@@ -45,8 +45,9 @@ def free_weight_cellular_automaton(a, k: int) -> int:
 # NOTE: we can get the same results in terms of generating primes by using an initial tape of 1s and 0s
 #   instead of 4s and 0s; the only difference is that the 4^n sea would become a 4^(n-1) sea, but
 #   essentially we'd still be measuring the growth of primes against 4^n in the long run.
-def b(k: int) -> int:
-    """
+def b(k):
+    """b(k: int) -> int
+
     Burton's initial biinfinite tape of integers, i.e. row n=1 (defined in Burton's paper)
     Returns the value at index k on this initial input tape:
         - if k is even and less than or equal to 0, return 4
@@ -60,7 +61,8 @@ def b(k: int) -> int:
 
 
 def B(k, n):
-    """
+    """B(k: int, n: int) -> int
+
     Gets the entry at coordinates (k, n) in the table of free weights (defined in Burton's paper);
     a mathematical formula expressed using standard operations, but still not closed-form.
 
@@ -90,12 +92,13 @@ def B(k, n):
 
 
 def get_k_index(n, nonpos_k=False, nontrivial=False):
-    """
+    """get_k_index(n: int, nonpos_k: bool=False, nontrivial: bool=False) -> range
+
     Returns the k-coordinates of the cells in row n within 3-n <= k <= n-3; less than this is the
     trivial 4^n sea, greater than this is the trivial zero sea
 
-        nonpos_k=True gets only k<=0 (where the master cell is conjectured to always be)
-        nontrivial=True gets only non-trivial entries (i.e. excludes zeros)
+        `nonpos_k=True` gets only k<=0 (where the master cell is conjectured to always be)
+        `nontrivial=True` gets only non-trivial entries (i.e. excludes zeros)
     """
 
     if n < 1:
@@ -106,25 +109,28 @@ def get_k_index(n, nonpos_k=False, nontrivial=False):
 
 
 def get_row(n, nonpos_k=False, nontrivial=False):
-    """
+    """get_row(n: int, nonpos_k: bool=False, nontrivial: bool=False) -> list
+
     Returns the entries in row n within 3-n <= k <= n-3; less than this is the trivial
     4^n sea, greater than this is the trivial zero sea
 
-        nonpos_k=True gets only k<=0 (where the master cell is conjectured to always be)
-        nontrivial=True gets only non-trivial entries (i.e. excludes zeros)
+        `nonpos_k=True` gets only k<=0 (where the master cell is conjectured to always be)
+        `nontrivial=True` gets only non-trivial entries (i.e. excludes zeros)
     """
     return [B(k, n) for k in get_k_index(n, nonpos_k, nontrivial)]
 
 
 def get_row_in_range(n, k_start, k_end):
-    """
+    """get_row_in_range(n: int, k_start: int, k_end: int) -> list
+
     Returns all entries (including trivial) in row n within start_k <= k <= end_k
     """
     return [B(k, n) for k in range(k_start, k_end + 1)]
 
 
 def intermediate_growth_ratio(n, p_n):
-    """
+    """intermediate_growth_ratio(n: int, p_n: int) -> float
+
     Computes the quantity
 
         ln(p_n) / (n * ln(4))
@@ -138,11 +144,12 @@ def intermediate_growth_ratio(n, p_n):
 
 
 def tofw_grid(k_range, n_range, factor_entries=False):
-    """
+    """tofw_grid(k_range: tuple, n_range: tuple, factor_entries: bool=False): -> pandas.core.frame.DataFrame
+
     Returns a pandas DataFrame of the table of free weights within a specified grid area
         k_range is a tuple (k_start, k_end)
         n_range is a tuple (n_start, n_end)
-        factor_entries=True factors all the entries in the table
+        `factor_entries=True` factors all the entries in the table
     """
 
     k_start, k_end = k_range
@@ -161,7 +168,8 @@ def tofw_grid(k_range, n_range, factor_entries=False):
 
 
 def Burton_triangle(n, verbose=False):
-    """
+    """Burton_triangle(n: int, verbose: bool=False) -> list
+
     This function essentially builds a triangle of non-trivial entries up to and including
     row n (resembles Pascal's triangle). The left diagonal of the triangle is comprised of
     powers of 4 (4^i for i from 1 to n) and the right diagonal of the triangle is comprised
