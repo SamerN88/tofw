@@ -32,12 +32,13 @@ from sympy.ntheory import factorint
 pd.set_option("display.max_rows", None, "display.max_columns", None)
 
 
-def free_weight_cellular_automaton(a, k: int) -> int:
-    """
+def free_weight_cellular_automaton(a, k):
+    """free_weight_cellular_automaton(a: function, k: int) -> int
+
     Burton's free weight cellular automaton (defined in Burton's paper)
         parameter `a` is a function representing a biinfinite tape of integers
         parameter `k` is an integer index on that tape
-        returns a(k-1) + 3a(k+1)
+        returns a(k-1) + 3*a(k+1)
     """
     return a(k - 1) + (3 * a(k + 1))
 
@@ -71,7 +72,7 @@ def B(k, n):
     """
 
     if n < 1:
-        msg = 'row index (n) must be a natural number in [1, inf)'
+        msg = 'row index `n` must be a natural number in [1, inf)'
         raise ValueError(msg)
 
     # If k and n have the same parity, or k >= n, the entry is always 0
@@ -80,7 +81,7 @@ def B(k, n):
 
     # Entries on and to the left of the diagonal (-n+1, n) are predictable powers of 4
     if k <= -n+1:
-        return 4 ** n
+        return 4**n
 
     m = n - 1
 
@@ -102,7 +103,7 @@ def get_k_index(n, nonpos_k=False, nontrivial=False):
     """
 
     if n < 1:
-        msg = 'row index (n) must be a natural number from [1, inf)'
+        msg = 'row index `n` must be a natural number from [1, inf)'
         raise ValueError(msg)
 
     return range(3-n, (0 if nonpos_k else n-3) + 1, 2 if nontrivial else 1)
@@ -147,8 +148,8 @@ def tofw_grid(k_range, n_range, factor_entries=False):
     """tofw_grid(k_range: tuple, n_range: tuple, factor_entries: bool=False): -> pandas.core.frame.DataFrame
 
     Returns a pandas DataFrame of the table of free weights within a specified grid area
-        k_range is a tuple (k_start, k_end)
-        n_range is a tuple (n_start, n_end)
+        `k_range` is a tuple (k_start, k_end)
+        `n_range` is a tuple (n_start, n_end)
         `factor_entries=True` factors all the entries in the table
     """
 
@@ -188,7 +189,7 @@ def Burton_triangle(n, verbose=False):
     """
 
     if n < 1:
-        msg = 'row index (n) must be a natural number in [1, inf)'
+        msg = 'row index `n` must be a natural number in [1, inf)'
         raise ValueError(msg)
 
     initial = [[4], [16, 4]]
@@ -210,6 +211,10 @@ def Burton_triangle(n, verbose=False):
             num_pads -= 1
 
     return [tuple(row) for row in triangle]
+
+
+# TODO: consider making get_row and get_row_in_range return tuples instead of lists
+# TODO: consider making get_row return ends (4^n and 4)
 
 
 def main():
