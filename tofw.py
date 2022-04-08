@@ -95,28 +95,42 @@ def B(k, n):
 def get_k_index(n, nonpos_k=False, nontrivial=False):
     """get_k_index(n: int, nonpos_k: bool=False, nontrivial: bool=False) -> range
 
-    Returns the k-coordinates of the cells in row n within 3-n <= k <= n-3; less than this is the
-    trivial 4^n sea, greater than this is the trivial zero sea
+    By default, returns a range object of the k-coordinates of the cells in row n within
+    1-n <= k <= n-1, which includes the index of the first 4^n entry from the left tail
+    (first element) and the index of the 4 entry from the right tail (last element); less
+    than this is the trivial 4^n sea, greater than this is the trivial zero sea.
 
         `nonpos_k=True` gets only k<=0 (where the master cell is conjectured to always be)
-        `nontrivial=True` gets only non-trivial entries (i.e. excludes zeros)
+        `nontrivial=True` gets only non-trivial entries (i.e. excludes zeros and powers of 4)
+
+    Cases:
+        - `nonpos_k=False` and `nontrivial=False`: returns range(1-n, (n-1) + 1)
+        - `nonpos_k=True` and `nontrivial=False`: returns range(1-n, 0 + 1)
+        - `nonpos_k=False` and `nontrivial=True`: returns range(3-n, (n-3) + 1, 2)
+        - `nonpos_k=True` and `nontrivial=True`: returns range(3-n, 0 + 1, 2)
     """
 
     if n < 1:
-        msg = 'row index `n` must be a natural number from [1, inf)'
+        msg = 'row index `n` must be a natural number in [1, inf)'
         raise ValueError(msg)
 
-    return range(3-n, (0 if nonpos_k else n-3) + 1, 2 if nontrivial else 1)
+    k_start = 1-n + (2 if nontrivial else 0)
+    k_end = (0 if nonpos_k else n-1) - (2 if nontrivial and not nonpos_k else 0)
+    step = 2 if nontrivial else 1
+
+    return range(k_start, k_end + 1, step)
 
 
 def get_row(n, nonpos_k=False, nontrivial=False):
     """get_row(n: int, nonpos_k: bool=False, nontrivial: bool=False) -> list
 
-    Returns the entries in row n within 3-n <= k <= n-3; less than this is the trivial
-    4^n sea, greater than this is the trivial zero sea
+    By default, returns a list of the entries in row n within 1-n <= k <= n-1, which includes
+    the first 4^n entry from the left tail (first element) and the 4 entry from the right tail
+    (last element); less than this is the trivial 4^n sea, greater than this is the trivial
+    zero sea.
 
         `nonpos_k=True` gets only k<=0 (where the master cell is conjectured to always be)
-        `nontrivial=True` gets only non-trivial entries (i.e. excludes zeros)
+        `nontrivial=True` gets only non-trivial entries (i.e. excludes zeros and powers of 4)
     """
     return [B(k, n) for k in get_k_index(n, nonpos_k, nontrivial)]
 
@@ -124,7 +138,7 @@ def get_row(n, nonpos_k=False, nontrivial=False):
 def get_row_in_range(n, k_start, k_end):
     """get_row_in_range(n: int, k_start: int, k_end: int) -> list
 
-    Returns all entries (including trivial) in row n within start_k <= k <= end_k
+    Returns a list of all entries (including trivial) in row n within k_start <= k <= k_end
     """
     return [B(k, n) for k in range(k_start, k_end + 1)]
 
@@ -169,21 +183,22 @@ def tofw_grid(k_range, n_range, factor_entries=False):
 
 
 def Burton_triangle(n, verbose=False):
-    """Burton_triangle(n: int, verbose: bool=False) -> list
+    """Burton_triangle(n: int, verbose: bool=False) -> dict
 
     This function essentially builds a triangle of non-trivial entries up to and including
     row n (resembles Pascal's triangle). The left diagonal of the triangle is comprised of
     powers of 4 (4^i for i from 1 to n) and the right diagonal of the triangle is comprised
-    of the number 4 repeated. The numbers inside the triangle are the non-trivial entries
-    up to and including row n.
+    of only 4s. Only these two diagonals are trivial entries; the numbers inside the triangle
+    are the non-trivial entries up to and including row n.
 
-    Returns a list of n tuples, representing the first n rows of the table of free weights;
-    each tuple is built as follows (let i be the row index from 1 to n):
+    Returns a dictionary representing the first n rows of the table of free weights; keys are
+    integer row indexes (1 to n), and values are tuples of row entries. Each tuple is built as
+    follows (let i be the row index from 1 to n):
         - first element is 4^i
         - inside elements are the non-trivial entries of row i
         - last element is 4
-    Each row of the triangle is essentially equivalent to
-    [4**i] + get_row(i, nontrivial=True) + [4]
+    Thus, each row of the triangle (except row 1) is essentially equivalent to
+    `[4**i] + get_row(i, nontrivial=True) + [4]`
 
     `verbose=True` prints the triangle neatly
     """
@@ -192,29 +207,32 @@ def Burton_triangle(n, verbose=False):
         msg = 'row index `n` must be a natural number in [1, inf)'
         raise ValueError(msg)
 
-    initial = [[4], [16, 4]]
-    if n < 3:
-        triangle = initial[:n]
+    initial = [[4]]
+    if n == 1:
+        triangle = initial
     else:
-        triangle = initial + [[4**i] + get_row(i, nontrivial=True) + [4] for i in range(3, n+1)]
+        triangle = initial + [[4**i] + get_row(i, nontrivial=True) + [4] for i in range(2, n+1)]
 
     if verbose:
         width = len(str(max(triangle[-1]))) + 1
         width += (width % 2)
 
         half_width = width // 2
+        index_width = len(str(n)) + 1
 
         num_pads = len(triangle[-1]) - 1
-        for row in triangle:
+        for i, row in enumerate(triangle, 1):
+            if n < 3:
+                index = ''
+            else:
+                index = str(i).ljust(index_width)
+
             padding = num_pads * half_width * ' '
-            print(padding + ''.join(str(e).center(width) for e in row))
+            print(index + padding + ''.join(str(e).center(width) for e in row))
+
             num_pads -= 1
 
-    return [tuple(row) for row in triangle]
-
-
-# TODO: consider making get_row and get_row_in_range return tuples instead of lists
-# TODO: consider making get_row return ends (4^n and 4)
+    return {i: tuple(row) for i, row in enumerate(triangle, 1)}
 
 
 def main():
