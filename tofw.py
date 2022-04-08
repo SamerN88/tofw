@@ -251,7 +251,7 @@ def main():
     dot_idx = rev.find('.')
     ext = rev[:dot_idx][::-1]
 
-    if ext not in ['csv', 'xlsx']:
+    if ext not in ['csv', 'xlsx'] or dot_idx == -1:
         print(f'\nInvalid file extension (only .csv and .xlsx allowed)')
         exit()
 
@@ -261,9 +261,9 @@ def main():
     print('Done')
 
     if ext == 'csv':
-        table.applymap(str).to_csv(fp)
+        table.to_csv(fp)
     elif ext == 'xlsx':
-        table.applymap(str).to_excel(fp)
+        table.to_excel(fp)
 
     print(f'\nTable saved in {fp}')
 
