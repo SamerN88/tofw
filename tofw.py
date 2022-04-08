@@ -114,8 +114,8 @@ def get_k_index(n, nonpos_k=False, nontrivial=False):
         msg = 'row index `n` must be a natural number in [1, inf)'
         raise ValueError(msg)
 
-    k_start = 1-n + (2 if nontrivial else 0)
-    k_end = (0 if nonpos_k else n-1) - (2 if nontrivial and not nonpos_k else 0)
+    k_start = 3-n if nontrivial else 1-n
+    k_end = 0 if nonpos_k else -k_start
     step = 2 if nontrivial else 1
 
     return range(k_start, k_end + 1, step)
@@ -197,8 +197,7 @@ def Burton_triangle(n, verbose=False):
         - first element is 4^i
         - inside elements are the non-trivial entries of row i
         - last element is 4
-    Thus, each row of the triangle (except row 1) is essentially equivalent to
-    `[4**i] + get_row(i, nontrivial=True) + [4]`
+    Thus, each row of the triangle is essentially equivalent to `get_row(i)[::2]`
 
     `verbose=True` prints the triangle neatly
     """
@@ -207,11 +206,7 @@ def Burton_triangle(n, verbose=False):
         msg = 'row index `n` must be a natural number in [1, inf)'
         raise ValueError(msg)
 
-    initial = [[4]]
-    if n == 1:
-        triangle = initial
-    else:
-        triangle = initial + [[4**i] + get_row(i, nontrivial=True) + [4] for i in range(2, n+1)]
+    triangle = [get_row(i)[::2] for i in range(1, n+1)]
 
     if verbose:
         width = len(str(max(triangle[-1]))) + 1
@@ -222,17 +217,18 @@ def Burton_triangle(n, verbose=False):
 
         num_pads = len(triangle[-1]) - 1
         for i, row in enumerate(triangle, 1):
-            if n < 3:
-                index = ''
-            else:
-                index = str(i).ljust(index_width)
-
+            index = '' if n < 3 else str(i).ljust(index_width)
             padding = num_pads * half_width * ' '
             print(index + padding + ''.join(str(e).center(width) for e in row))
 
             num_pads -= 1
 
     return {i: tuple(row) for i, row in enumerate(triangle, 1)}
+
+
+# TODO: test conjecture that says all master cells are in k<=0 by looking at master cells with relatively
+#   lower intermediate growth ratio and re-sifting the entire row including k>0 and seeing if there's a
+#   better p_n
 
 
 def main():
