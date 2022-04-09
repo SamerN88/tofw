@@ -16,6 +16,8 @@ Some terminology/notation:
     master cell - the cell whose entry has the largest prime factor in its row
     master entry - the entry in the master cell
     master prime - the largest prime factor of the master entry (denoted by p_n)
+    nontrivial - refers to entries that are neither powers of 4 nor zero; nontrivial
+        entries are located wherever k != n (mod 2) and |k| <= n-3
     4^n sea - the infinite grid of cells stretching leftward where k<3-n; all entries
         here are 4^n where k and n have different parities, and 0 where k and n have
         equal parities (we consider these cells trivial)
