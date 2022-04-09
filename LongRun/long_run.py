@@ -4,7 +4,7 @@ Samer Najjar
 30 January 2022
 
 This exploration aims to measure the growth of the master prime p_n against 4^n in the long run. To
-do so, for each row, we find p_n by factoring all non-trivial entries in row n and finding the
+do so, for each row, we find p_n by factoring all nontrivial entries in row n and finding the
 largest prime among all the factors. Then, we compute the "growth average" described below, which is
 our metric for measuring the growth of p_n against 4^n. The goal is to observe the behavior of this
 metric in the long run, in hopes that it approaches 1 (see below).
@@ -105,10 +105,10 @@ def prime_growth_data_logger(max_depth=None):
         while (max_depth is None) or (n <= max_depth):
             t1 = time.time()
 
-            # Get k-coordinates of non-trivial cells (only k<=0, by conjecture)
+            # Get k-coordinates of nontrivial cells (only k<=0, by conjecture)
             k_index = get_k_index(n, nonpos_k=True, nontrivial=True)
 
-            # Generate non-trivial entries in row n (only k<=0, by conjecture)
+            # Generate nontrivial entries in row n (only k<=0, by conjecture)
             row = get_row(n, nonpos_k=True, nontrivial=True)
 
             # Factor entries in row, and show progress
