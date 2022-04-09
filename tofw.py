@@ -67,8 +67,8 @@ def B(k, n):
     Gets the entry at coordinates (k, n) in the table of free weights (defined in Burton's paper);
     a mathematical formula expressed using standard operations, but still not closed-form.
 
-    Formula:
-    B(k, n) = 4 * sum_{i=0}^{n//2 - k//2} binomial(n-1, i) * 3^i
+    Formula for nontrivial entries:
+    B(k, n) = 4 * sum_{i=0}^{(n-k-1) / 2} binomial(n-1, i) * 3^i
     """
 
     if n < 1:
@@ -83,12 +83,10 @@ def B(k, n):
     if k <= -n+1:
         return 4**n
 
-    m = n - 1
+    num_coefs = (n-k-1)//2 + 1  # always an integer when k != n (mod 2)
+    binomial_coefs = (math.comb(n-1, i) for i in range(num_coefs))
 
-    num_coefs = (m//2 - k//2) + 1
-    binomial_coefs = (math.comb(m, i) for i in range(num_coefs))
-
-    # 4 * sum_{i=0}^{n//2 - k//2} binomial(n-1, i) * 3^i
+    # 4 * sum_{i=0}^{(n-k-1) / 2} binomial(n-1, i) * 3^i
     return 4 * sum(coef * 3**e for e, coef in enumerate(binomial_coefs))
 
 
@@ -101,7 +99,7 @@ def get_k_index(n, nonpos_k=False, nontrivial=False):
     than this is the trivial 4^n sea, greater than this is the trivial zero sea.
 
         `nonpos_k=True` gets only k<=0 (where the master cell is conjectured to always be)
-        `nontrivial=True` gets only non-trivial entries (i.e. excludes zeros and powers of 4)
+        `nontrivial=True` gets only nontrivial entries (i.e. excludes zeros and powers of 4)
 
     Cases:
         - `nonpos_k=False` and `nontrivial=False`: returns range(1-n, (n-1) + 1)
@@ -130,7 +128,7 @@ def get_row(n, nonpos_k=False, nontrivial=False):
     zero sea.
 
         `nonpos_k=True` gets only k<=0 (where the master cell is conjectured to always be)
-        `nontrivial=True` gets only non-trivial entries (i.e. excludes zeros and powers of 4)
+        `nontrivial=True` gets only nontrivial entries (i.e. excludes zeros and powers of 4)
     """
     return [B(k, n) for k in get_k_index(n, nonpos_k, nontrivial)]
 
@@ -182,24 +180,25 @@ def tofw_grid(k_range, n_range, factor_entries=False):
     return pd.DataFrame(rows, list(range(n_start, n_end + 1)), list(range(k_start, k_end + 1)))
 
 
-def Burton_triangle(n, verbose=False):
+def Burton_triangle(n, verbose=False, reduce=False):
     """Burton_triangle(n: int, verbose: bool=False) -> dict
 
-    This function essentially builds a triangle of non-trivial entries up to and including
+    This function essentially builds a triangle of nontrivial entries up to and including
     row n (resembles Pascal's triangle). The left diagonal of the triangle is comprised of
     powers of 4 (4^i for i from 1 to n) and the right diagonal of the triangle is comprised
-    of only 4s. Only these two diagonals are trivial entries; the numbers inside the triangle
-    are the non-trivial entries up to and including row n.
+    of only 4s. Only these two diagonals are trivial entries; the numbers inside the
+    triangle are the nontrivial entries up to and including row n.
 
-    Returns a dictionary representing the first n rows of the table of free weights; keys are
-    integer row indexes (1 to n), and values are tuples of row entries. Each tuple is built as
-    follows (let i be the row index from 1 to n):
+    Returns a dictionary representing the first n rows of the table of free weights; keys
+    are integer row indexes (1 to n), and values are tuples of row entries. Each tuple is
+    built as follows (let i be the row index from 1 to n):
         - first element is 4^i
-        - inside elements are the non-trivial entries of row i
+        - inside elements are the nontrivial entries of row i
         - last element is 4
     Thus, each row of the triangle is essentially equivalent to `get_row(i)[::2]`
 
     `verbose=True` prints the triangle neatly
+    `reduce=True` divides all terms by 4
     """
 
     if n < 1:
@@ -207,6 +206,9 @@ def Burton_triangle(n, verbose=False):
         raise ValueError(msg)
 
     triangle = [get_row(i)[::2] for i in range(1, n+1)]
+
+    if reduce:
+        triangle = [[e//4 for e in row] for row in triangle]
 
     if verbose:
         width = len(str(max(triangle[-1]))) + 1
@@ -224,11 +226,6 @@ def Burton_triangle(n, verbose=False):
             num_pads -= 1
 
     return {i: tuple(row) for i, row in enumerate(triangle, 1)}
-
-
-# TODO: test conjecture that says all master cells are in k<=0 by looking at master cells with relatively
-#   lower intermediate growth ratio and re-sifting the entire row including k>0 and seeing if there's a
-#   better p_n
 
 
 def main():

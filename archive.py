@@ -68,10 +68,8 @@ def B_mathy(k, n):
     if k <= -n+1:
         return 4**n
 
-    m = n - 1
-
-    num_coefs = (m//2 - k//2) + 1
-    binomial_coefs = (math.comb(m, i) for i in range(num_coefs))
+    num_coefs = (n-k-1)//2 + 1  # always an integer when k != n (mod 2)
+    binomial_coefs = (math.comb(n-1, i) for i in range(num_coefs))
 
     # 4 * sum_{i=0}^{n//2 - k//2} binomial(n-1, i) * 3^i
     return 4 * sum(coef * 3 ** e for e, coef in enumerate(binomial_coefs))
@@ -154,7 +152,7 @@ First working formula for center column (k=0):
     for n > 3
 
 Find formula for B(k, n):
-(try to only compute non-trivial cells; trivial cells are already rapidly computable)
+(try to only compute nontrivial cells; trivial cells are already rapidly computable)
 
 B(k, n) = [(n + k) % 2] * 4 * c(n)
 
