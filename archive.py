@@ -18,7 +18,7 @@ def b(k):
 
 def B_recursive(k, n):
     """
-    First formula for B(k, n); recursive
+    First function for B(k, n); recursive
     (developed 21 May 2021)
     """
 
@@ -31,7 +31,7 @@ def B_recursive(k, n):
 
 def B_iterative(k, n):
     """
-    Second formula for B(k, n); iterative
+    Second function for B(k, n); iterative
     (developed 27 May 2021)
     """
 
@@ -55,9 +55,10 @@ def B_iterative(k, n):
 
 def B_mathy(k, n):
     """
-    Third formula for B(k, n); a more mathematical approach using summation, binomial
-    coefficients, powers of 3, and the floor function, though still not closed-form
-    (developed 4 April 2022)
+    Third function for B(k, n); a mathematical formula using a summation of products
+    of binomial coefficients and powers of 3, though not closed-form.
+    (original form developed 4 April 2022)
+    (alternate form developed 8 April 2022)
     """
 
     # If k and n have the same parity, or k >= n, the entry is always 0
@@ -68,11 +69,14 @@ def B_mathy(k, n):
     if k <= -n+1:
         return 4**n
 
-    num_coefs = (n-k-1)//2 + 1  # always an integer when k != n (mod 2)
-    binomial_coefs = (math.comb(n-1, i) for i in range(num_coefs))
+    # Note that on average, over all k, both forms are equally efficient
 
-    # 4 * sum_{i=0}^{n//2 - k//2} binomial(n-1, i) * 3^i
-    return 4 * sum(coef * 3 ** e for e, coef in enumerate(binomial_coefs))
+    if k > 0:
+        # Original form; faster for k > 0
+        return 4 * sum(math.comb(n-1, i) * 3**i for i in range(0, (n-k-1)//2 + 1))
+    else:
+        # Alternate form; faster for k < 0
+        return 4**n - 4*sum(math.comb(n-1, i) * 3**i for i in range((n-k+1)//2, (n-1) + 1))
 
 
 def main():

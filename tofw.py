@@ -67,10 +67,14 @@ def B(k, n):
     """B(k: int, n: int) -> int
 
     Gets the entry at coordinates (k, n) in the table of free weights (defined in Burton's paper);
-    a mathematical formula expressed using standard operations, but still not closed-form.
+    a mathematical formula using a summation of products of binomial coefficients and powers of 3,
+    though not closed-form.
 
-    Formula for nontrivial entries:
-    B(k, n) = 4 * sum_{i=0}^{(n-k-1) / 2} binomial(n-1, i) * 3^i
+    Original form (faster for k > 0):
+    B(k, n) = 4 * sum_{i=0}^{(n-k-1)/2} binomial(n-1, i) * 3^i
+
+    Alternate form (faster for k < 0):
+    B(k, n) = 4^n - [4 * sum_{i=(n-k+1)/2}^{n-1} binomial(n-1, i) * 3^i]
     """
 
     if n < 1:
@@ -85,11 +89,14 @@ def B(k, n):
     if k <= -n+1:
         return 4**n
 
-    num_coefs = (n-k-1)//2 + 1  # always an integer when k != n (mod 2)
-    binomial_coefs = (math.comb(n-1, i) for i in range(num_coefs))
+    # Note that on average, over all k, both forms are equally efficient
 
-    # 4 * sum_{i=0}^{(n-k-1) / 2} binomial(n-1, i) * 3^i
-    return 4 * sum(coef * 3**e for e, coef in enumerate(binomial_coefs))
+    if k > 0:
+        # Original form; faster for k > 0
+        return 4 * sum(math.comb(n-1, i) * 3**i for i in range(0, (n-k-1)//2 + 1))
+    else:
+        # Alternate form; faster for k < 0
+        return 4**n - 4*sum(math.comb(n-1, i) * 3**i for i in range((n-k+1)//2, (n-1) + 1))
 
 
 def get_k_index(n, nonpos_k=False, nontrivial=False):
