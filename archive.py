@@ -56,7 +56,7 @@ def B_iterative(k, n):
 def B_mathy(k, n):
     """
     Third function for B(k, n); a mathematical formula using a summation of products
-    of binomial coefficients and powers of 3, though not closed-form.
+    of binomial coefficients and powers of 3, though not closed-form
     (original form developed 4 April 2022)
     (alternate form developed 8 April 2022)
     """
@@ -88,6 +88,9 @@ def main():
             mathy = B_mathy(k, n)
             if not (recursive == iterative == mathy):
                 print('FUNCTIONS ARE NOT EQUAL')
+                print(f'(recursive == iterative) == {recursive == iterative}')
+                print(f'(iterative == mathy) == {iterative == mathy}')
+                print(f'(mathy == recursive) == {mathy == recursive}')
                 return
 
     # Show info
