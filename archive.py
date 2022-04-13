@@ -1,5 +1,5 @@
 """
-An archive documenting the evolution of the algorithms used in this project.
+An archive documenting the evolution of the formula for B(k, n) used in this project.
 
 B(k, n) = the entry at coordinates (k, n) in the table of free weights
 """
@@ -73,9 +73,11 @@ def B_mathy(k, n):
 
     if k > 0:
         # Original form; faster for k > 0
+        # B(k, n) = 4 * sum_{i=0}^{(n-k-1)/2} binomial(n-1, i) * 3^i
         return 4 * sum(math.comb(n-1, i) * 3**i for i in range(0, (n-k-1)//2 + 1))
     else:
         # Alternate form; faster for k < 0
+        # B(k, n) = 4^n - [4 * sum_{i=(n-k+1)/2}^{n-1} binomial(n-1, i) * 3^i]
         return 4**n - 4*sum(math.comb(n-1, i) * 3**i for i in range((n-k+1)//2, (n-1) + 1))
 
 
