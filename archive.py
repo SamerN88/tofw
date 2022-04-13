@@ -104,17 +104,17 @@ def main():
     k = -16
     print(f'n={n}, k={k}')
 
-    t1 = time.time()
+    t1 = time.perf_counter()
     B_recursive(k, n)
-    print(f'Recursive: {time.time() - t1} sec')
+    print(f'Recursive: {time.perf_counter() - t1} sec')
 
-    t2 = time.time()
+    t2 = time.perf_counter()
     B_iterative(k, n)
-    print(f'Iterative: {time.time() - t2} sec')
+    print(f'Iterative: {time.perf_counter() - t2} sec')
 
-    t3 = time.time()
+    t3 = time.perf_counter()
     B_mathy(k, n)
-    print(f'Mathy: {time.time() - t3} sec')
+    print(f'Mathy: {time.perf_counter() - t3} sec')
 
     print()
 
@@ -122,13 +122,13 @@ def main():
     k = -1501
     print(f'n={n}, k={k}')
 
-    t1 = time.time()
+    t1 = time.perf_counter()
     B_iterative(k, n)
-    print(f'Iterative: {time.time() - t1} sec')
+    print(f'Iterative: {time.perf_counter() - t1} sec')
 
-    t2 = time.time()
+    t2 = time.perf_counter()
     B_mathy(k, n)
-    print(f'Mathy: {time.time() - t2} sec')
+    print(f'Mathy: {time.perf_counter() - t2} sec')
 
 
 if __name__ == '__main__':

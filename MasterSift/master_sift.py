@@ -38,10 +38,10 @@ def get_benchmark_timeout(bm_entry=B(-951, 1000)):
     # it isn't.
 
     # Get average runtime of 10 benchmark runs
-    t1 = time.time()
+    t1 = time.perf_counter()
     for _ in range(10):
         timeout_factorint(bm_entry, 2**19 - 1)  # absurdly long timeout to ensure bm_entry is factored
-    runtime = time.time() - t1
+    runtime = time.perf_counter() - t1
 
     bm_runtime = runtime / 10
     return bm_runtime
@@ -83,7 +83,7 @@ def master_sifter(max_depth=None):
         raise ValueError(msg)
 
     # Start timestamp
-    start_time = time.time()
+    start_time = time.perf_counter()
     start = f'{datetime.datetime.now()} {time.localtime().tm_zone}'
     print(f'Start run at {start}\n\n')
 
@@ -111,7 +111,7 @@ def master_sifter(max_depth=None):
 
     try:
         while (max_depth is None) or (n <= max_depth):
-            t1 = time.time()
+            t1 = time.perf_counter()
 
             # Based on benchmark timeout get appropriate timeout for this n, then sift through row n for master data
             timeout = bm_timeout * 2  # arbitrary multiplier; just give enough time
@@ -130,7 +130,7 @@ def master_sifter(max_depth=None):
                                  intermediate_growth_ratio(n, p_n)
                          ) / n
 
-            runtime = time.time() - t1  # in seconds
+            runtime = time.perf_counter() - t1  # in seconds
 
             # Log ------------------------------------------------------------------------------------------------------
             if LOG_DATA:
@@ -163,7 +163,7 @@ def master_sifter(max_depth=None):
         print('PROCESS STOPPED BY USER\n')
     finally:
         # End timestamp
-        end_time = time.time()
+        end_time = time.perf_counter()
         end = f'{datetime.datetime.now()} {time.localtime().tm_zone}'
 
         # Get last n that was logged
