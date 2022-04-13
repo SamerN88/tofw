@@ -165,6 +165,43 @@ def intermediate_growth_ratio(n, p_n):
     return ln(p_n) / (n * ln(4))
 
 
+def is_nontrivial(k, n):
+    """is_nontrivial(k: int, n: int) ->
+
+    Checks whether a coordinate pair (k, n) locates a nontrivial or trivial cell.
+        returns `True` if nontrivial
+        returns `False` if trivial
+    """
+    return ((k % 2) != (n % 2)) and (abs(k) <= n-3)
+
+
+def get_nontrivial_index(max_n=None):
+    """get_nontrivial_index(max_n: int=None) -> generator
+
+    Returns a generator that generates nontrivial coordinate pairs (k, n), reading
+    left-to-right across a row, then down. Stops after completing row `max_n`, or
+    if `max_n=None`, generates infinitely.
+    """
+
+    n = 3
+    while (max_n is None) or (n <= max_n):
+        for k in range(3 - n, (n - 3) + 1, 2):
+            yield k, n
+        n += 1
+
+
+def get_nontrivial_entries(max_n=None):
+    """get_nontrivial_index(max_n: int=None) -> generator
+
+    Returns a generator that generates nontrivial entries B(k, n), reading
+    left-to-right across a row, then down. Stops after completing row `max_n`,
+    or if `max_n=None`, generates infinitely.
+    """
+
+    for k, n in get_nontrivial_index(max_n):
+        yield B(k, n)
+
+
 def tofw_grid(k_range, n_range, factor_entries=False):
     """tofw_grid(k_range: tuple, n_range: tuple, factor_entries: bool=False): -> pandas.core.frame.DataFrame
 
