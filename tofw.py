@@ -277,6 +277,15 @@ def Burton_triangle(n, verbose=False, reduce=False):
 def main():
     # Get grid range and factor_entries option
     n_start, n_end = [int(n) for n in input('Enter n range: ').split()]
+
+    # Hidden feature:
+    #   - if n_start is -1, prints Burton's triangle up to n=n_end
+    #   - if n_start is -2, reduces triangle
+    if n_start in [-1, -2]:
+        print()
+        Burton_triangle(n_end, verbose=True, reduce=(n_start == -2))
+        return
+
     k_start, k_end = [int(k) for k in input('Enter k range: ').split()]
     factor_entries = input('Factor entries? [y/n]: ').strip().lower()[0] == 'y'
 
