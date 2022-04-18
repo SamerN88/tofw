@@ -1,5 +1,5 @@
 """
-An archive documenting the evolution of the algorithms used in this project.
+An archive documenting the evolution of the formula for B(k, n) used in this project.
 
 B(k, n) = the entry at coordinates (k, n) in the table of free weights
 """
@@ -56,7 +56,7 @@ def B_iterative(k, n):
 def B_mathy(k, n):
     """
     Third function for B(k, n); a mathematical formula using a summation of products
-    of binomial coefficients and powers of 3, though not closed-form.
+    of binomial coefficients and powers of 3, though not closed-form
     (original form developed 4 April 2022)
     (alternate form developed 8 April 2022)
     """
@@ -73,9 +73,11 @@ def B_mathy(k, n):
 
     if k > 0:
         # Original form; faster for k > 0
+        # B(k, n) = 4 * sum_{i=0}^{(n-k-1)/2} binomial(n-1, i) * 3^i
         return 4 * sum(math.comb(n-1, i) * 3**i for i in range(0, (n-k-1)//2 + 1))
     else:
         # Alternate form; faster for k < 0
+        # B(k, n) = 4^n - [4 * sum_{i=(n-k+1)/2}^{n-1} binomial(n-1, i) * 3^i]
         return 4**n - 4*sum(math.comb(n-1, i) * 3**i for i in range((n-k+1)//2, (n-1) + 1))
 
 
@@ -88,6 +90,9 @@ def main():
             mathy = B_mathy(k, n)
             if not (recursive == iterative == mathy):
                 print('FUNCTIONS ARE NOT EQUAL')
+                print(f'(recursive == iterative) == {recursive == iterative}')
+                print(f'(iterative == mathy) == {iterative == mathy}')
+                print(f'(mathy == recursive) == {mathy == recursive}')
                 return
 
     # Show info
@@ -101,17 +106,17 @@ def main():
     k = -16
     print(f'n={n}, k={k}')
 
-    t1 = time.time()
+    t1 = time.perf_counter()
     B_recursive(k, n)
-    print(f'Recursive: {time.time() - t1} sec')
+    print(f'Recursive: {time.perf_counter() - t1} sec')
 
-    t2 = time.time()
+    t2 = time.perf_counter()
     B_iterative(k, n)
-    print(f'Iterative: {time.time() - t2} sec')
+    print(f'Iterative: {time.perf_counter() - t2} sec')
 
-    t3 = time.time()
+    t3 = time.perf_counter()
     B_mathy(k, n)
-    print(f'Mathy: {time.time() - t3} sec')
+    print(f'Mathy: {time.perf_counter() - t3} sec')
 
     print()
 
@@ -119,13 +124,13 @@ def main():
     k = -1501
     print(f'n={n}, k={k}')
 
-    t1 = time.time()
+    t1 = time.perf_counter()
     B_iterative(k, n)
-    print(f'Iterative: {time.time() - t1} sec')
+    print(f'Iterative: {time.perf_counter() - t1} sec')
 
-    t2 = time.time()
+    t2 = time.perf_counter()
     B_mathy(k, n)
-    print(f'Mathy: {time.time() - t2} sec')
+    print(f'Mathy: {time.perf_counter() - t2} sec')
 
 
 if __name__ == '__main__':

@@ -103,7 +103,7 @@ def prime_growth_data_logger(max_depth=None):
 
     try:
         while (max_depth is None) or (n <= max_depth):
-            t1 = time.time()
+            t1 = time.perf_counter()
 
             # Get k-coordinates of nontrivial cells (only k<=0, by conjecture)
             k_index = get_k_index(n, nonpos_k=True, nontrivial=True)
@@ -146,7 +146,7 @@ def prime_growth_data_logger(max_depth=None):
                             intermediate_growth_ratio(n, p_n)
                         ) / n
 
-            runtime = time.time() - t1  # in seconds
+            runtime = time.perf_counter() - t1  # in seconds
 
             stdout = f'n={n}, k={master_k}\n'
             stdout += f'p_n = {p_n}\n'

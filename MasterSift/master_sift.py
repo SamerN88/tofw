@@ -38,10 +38,10 @@ def get_benchmark_timeout(bm_entry=B(-951, 1000)):
     # it isn't.
 
     # Get average runtime of 10 benchmark runs
-    t1 = time.time()
+    t1 = time.perf_counter()
     for _ in range(10):
         timeout_factorint(bm_entry, 2**19 - 1)  # absurdly long timeout to ensure bm_entry is factored
-    runtime = time.time() - t1
+    runtime = time.perf_counter() - t1
 
     bm_runtime = runtime / 10
     return bm_runtime
@@ -83,7 +83,7 @@ def master_sifter(max_depth=None):
         raise ValueError(msg)
 
     # Start timestamp
-    start_time = time.time()
+    start_time = time.perf_counter()
     start = f'{datetime.datetime.now()} {time.localtime().tm_zone}'
     print(f'Start run at {start}\n\n')
 
@@ -111,17 +111,38 @@ def master_sifter(max_depth=None):
 
     try:
         while (max_depth is None) or (n <= max_depth):
-            t1 = time.time()
+            t1 = time.perf_counter()
 
             # Based on benchmark timeout get appropriate timeout for this n, then sift through row n for master data
             timeout = bm_timeout * 2  # arbitrary multiplier; just give enough time
             master_cell = sift_row(n, timeout)
+
+            # If timeout was too short, master_cell will be None; get new benchmark timeout and
+            # re-sift row; if still fails, exit
+            if master_cell is None:
+                print(f'Timeout of {timeout} sec was too short; getting new benchmark timeout...')
+                bm_timeout = get_benchmark_timeout(last_master_entry)
+                print(f'  benchmark timeout: {bm_timeout} sec')
+
+                timeout = bm_timeout * 2
+                print(f'Re-sifting n={n} with timeout of {timeout} sec:\n')
+
+                master_cell = sift_row(n, timeout)
+
+                # If master_cell is still None after re-sifting, display message and exit
+                if master_cell is None:
+                    print('RE-SIFTING FAILED; EXIT.\n')
+                    exit()  # finally block will still execute
 
             n = master_cell['n']
             k = master_cell['k']
             p_n = master_cell['p_n']
             entry = master_cell['entry']
             factors = master_cell['factors']
+
+            # Save last master entry in case sifting fails next iteration, we can use this entry to
+            # get new benchmark timeout
+            last_master_entry = entry
 
             # Compute new growth average
             growth_avg = (
@@ -130,7 +151,7 @@ def master_sifter(max_depth=None):
                                  intermediate_growth_ratio(n, p_n)
                          ) / n
 
-            runtime = time.time() - t1  # in seconds
+            runtime = time.perf_counter() - t1  # in seconds
 
             # Log ------------------------------------------------------------------------------------------------------
             if LOG_DATA:
@@ -153,8 +174,8 @@ def master_sifter(max_depth=None):
 
             n += 1
 
-            # Every 1000 rows, update benchmark timeout
-            if n % 1000 == 1:
+            # Every 500 rows, update benchmark timeout
+            if n % 500 == 1:
                 print('Getting new benchmark timeout...')
                 bm_timeout = get_benchmark_timeout(entry)
                 print(f'New benchmark timeout: {bm_timeout} sec\n')
@@ -163,7 +184,7 @@ def master_sifter(max_depth=None):
         print('PROCESS STOPPED BY USER\n')
     finally:
         # End timestamp
-        end_time = time.time()
+        end_time = time.perf_counter()
         end = f'{datetime.datetime.now()} {time.localtime().tm_zone}'
 
         # Get last n that was logged
