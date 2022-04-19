@@ -1,4 +1,6 @@
 import pandas as pd
+import numpy as np
+from math import log as ln
 
 
 def _compile_master_cells_data():
@@ -30,6 +32,20 @@ def _compile_master_cells_data():
     master_cells = pd.concat([master_cells_LR, master_cells_MS], axis=0, ignore_index=True)
 
     return master_cells
+
+
+def compute_growth_avg(up_to_n=None):
+    df = master_cells_df.copy()
+    n = df['n']
+    p_n = df['p_n']
+
+    if up_to_n is None:
+        up_to_n = n.max()
+
+    ln_p_n = np.array([ln(p) for p in p_n[n <= up_to_n]])
+    ln_4n = np.array([i*ln(4) for i in range(1, up_to_n+1)])
+
+    return (ln_p_n / ln_4n).mean()
 
 
 master_cells_df = _compile_master_cells_data()
