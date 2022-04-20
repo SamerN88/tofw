@@ -48,4 +48,11 @@ def compute_growth_avg(up_to_n=None):
     return (ln_p_n / ln_4n).mean()
 
 
+def mc(n):
+    # Returns the master cell of row n as a Series containing its relevant data
+    # (n, k, p_n, growth_avg, entry, factors)
+    df = master_cells_df.copy()
+    return df[['n', 'k', 'p_n', 'growth_avg', 'entry', 'factors']][df['n'] == n].iloc[0]
+
+
 master_cells_df = _compile_master_cells_data()
